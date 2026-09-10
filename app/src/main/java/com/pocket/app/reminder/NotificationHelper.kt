@@ -65,7 +65,7 @@ object NotificationHelper {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notification = NotificationCompat.Builder(context, REMINDER_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle("⏰ $title")
             .setContentText(description.ifEmpty { "Pocket Reminder" })
             .setStyle(NotificationCompat.BigTextStyle().bigText(description))
