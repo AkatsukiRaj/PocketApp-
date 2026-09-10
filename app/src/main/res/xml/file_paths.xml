@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="pocket_files" path="vault/" />
+    <files-path name="pocket_exports" path="exports/" />
+    <external-files-path name="pocket_external" path="vault/" />
+    <cache-path name="pocket_cache" path="/" />
+</paths>
