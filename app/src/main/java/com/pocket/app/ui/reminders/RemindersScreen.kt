@@ -61,7 +61,7 @@ fun RemindersScreen(
                 contentColor = Color.White,
                 shape = RoundedCornerShape(18.dp)
             ) {
-                Icon(Icons.Default.AddAlarm, contentDescription = null)
+                Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("புது அலாரம் (New Alarm)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
@@ -80,7 +80,7 @@ fun RemindersScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            Icons.Default.NotificationsActive,
+                            Icons.Default.Notifications,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = Color.LightGray
@@ -277,7 +277,7 @@ fun RemindersScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                        Icon(Icons.Default.AccessTime, contentDescription = null)
+                        Icon(Icons.Default.DateRange, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("நேரம் மாற்றுக: ${sdf.format(selectedCalendar.time)}", fontWeight = FontWeight.Bold)
                     }

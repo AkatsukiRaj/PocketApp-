@@ -147,7 +147,7 @@ fun HomeScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.PushPin,
+                            Icons.Default.Star,
                             contentDescription = null,
                             tint = Color(0xFFF59E0B),
                             modifier = Modifier.size(20.dp)
@@ -245,7 +245,7 @@ fun HomeScreen(
                 title = LanguageHelper.text(language, "Photos & Album", "படங்கள் & ஆல்பம்"),
                 subtitle = LanguageHelper.text(language, "Prescriptions, Bills, Photos", "மருத்துவ சீட்டுகள், ரசீதுகள்"),
                 countText = "${photos.size} " + LanguageHelper.text(language, "Files", "கோப்புகள்"),
-                icon = Icons.Default.Image,
+                icon = Icons.Default.AccountBox,
                 gradient = Brush.horizontalGradient(listOf(Color(0xFF2563EB), Color(0xFF1D4ED8))),
                 onClick = onNavigateToPhotos
             )
@@ -256,7 +256,7 @@ fun HomeScreen(
                 title = LanguageHelper.text(language, "Documents (PDF & Excel)", "ஆவணங்கள் (PDF & Excel)"),
                 subtitle = LanguageHelper.text(language, "Aadhaar, PAN, Bank, Sheets", "ஆதார், பான், வங்கி, எக்செல்"),
                 countText = "${docs.size} " + LanguageHelper.text(language, "Files", "கோப்புகள்"),
-                icon = Icons.Default.Description,
+                icon = Icons.Default.Info,
                 gradient = Brush.horizontalGradient(listOf(Color(0xFF059669), Color(0xFF047857))),
                 onClick = onNavigateToDocs
             )
@@ -267,7 +267,7 @@ fun HomeScreen(
                 title = LanguageHelper.text(language, "Smart Notes", "ஸ்மார்ட் குறிப்புகள்"),
                 subtitle = LanguageHelper.text(language, "Grocery list, Daily notes", "மளிகை பட்டியல், அன்றாட குறிப்புகள்"),
                 countText = "${notes.size} " + LanguageHelper.text(language, "Notes", "குறிப்புகள்"),
-                icon = Icons.Default.EditNote,
+                icon = Icons.Default.Edit,
                 gradient = Brush.horizontalGradient(listOf(Color(0xFF7C3AED), Color(0xFF6D28D9))),
                 onClick = onNavigateToNotes
             )
@@ -278,7 +278,7 @@ fun HomeScreen(
                 title = LanguageHelper.text(language, "Reminders & Alarms", "அலாரம் & நினைவூட்டல்"),
                 subtitle = LanguageHelper.text(language, "Medicine time, Bill alerts", "மாத்திரை நேரம், கட்டண அலாரம்"),
                 countText = "${reminders.size} " + LanguageHelper.text(language, "Alarms", "அலாரங்கள்"),
-                icon = Icons.Default.Alarm,
+                icon = Icons.Default.Notifications,
                 gradient = Brush.horizontalGradient(listOf(Color(0xFFD97706), Color(0xFFB45309))),
                 onClick = onNavigateToReminders
             )

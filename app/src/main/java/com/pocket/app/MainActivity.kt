@@ -36,10 +36,10 @@ import com.pocket.app.utils.LanguageHelper
 
 sealed class Screen(val route: String, val english: String, val tamil: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", "முகப்பு", Icons.Default.Home)
-    object Photos : Screen("photos", "Photos", "படங்கள்", Icons.Default.Image)
-    object Docs : Screen("docs", "Docs", "கோப்புகள்", Icons.Default.Description)
-    object Notes : Screen("notes", "Notes", "குறிப்புகள்", Icons.Default.EditNote)
-    object Reminders : Screen("reminders", "Alarms", "அலாரம்", Icons.Default.Alarm)
+    object Photos : Screen("photos", "Photos", "படங்கள்", Icons.Default.AccountBox)
+    object Docs : Screen("docs", "Docs", "கோப்புகள்", Icons.Default.Info)
+    object Notes : Screen("notes", "Notes", "குறிப்புகள்", Icons.Default.Edit)
+    object Reminders : Screen("reminders", "Alarms", "அலாரம்", Icons.Default.Notifications)
 }
 
 class MainActivity : ComponentActivity() {

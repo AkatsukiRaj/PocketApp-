@@ -133,7 +133,7 @@ fun VaultScreen(
                         modifier = Modifier.padding(32.dp)
                     ) {
                         Icon(
-                            if (targetType == ItemType.PHOTO) Icons.Default.PhotoLibrary else Icons.Default.FolderOpen,
+                            if (targetType == ItemType.PHOTO) Icons.Default.AccountBox else Icons.Default.Info,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = Color.LightGray
@@ -283,7 +283,7 @@ fun VaultItemCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        if (item.itemType == ItemType.PHOTO) Icons.Default.Image else Icons.Default.Description,
+                        if (item.itemType == ItemType.PHOTO) Icons.Default.AccountBox else Icons.Default.Info,
                         contentDescription = null,
                         tint = if (item.itemType == ItemType.PHOTO) Color(0xFF2563EB) else Color(0xFF059669),
                         modifier = Modifier.size(26.dp)
@@ -309,7 +309,7 @@ fun VaultItemCard(
                 // Pin button
                 IconButton(onClick = onTogglePin) {
                     Icon(
-                        if (item.isPinned) Icons.Default.PushPin else Icons.Default.OutlinedFlag,
+                        if (item.isPinned) Icons.Default.Star else Icons.Default.FavoriteBorder,
                         contentDescription = "Pin",
                         tint = if (item.isPinned) Color(0xFFF59E0B) else Color.LightGray
                     )

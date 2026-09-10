@@ -73,7 +73,7 @@ fun NotesScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            Icons.Default.NoteAlt,
+                            Icons.Default.Edit,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = Color.LightGray
@@ -120,7 +120,7 @@ fun NotesScreen(
                                     Row {
                                         IconButton(onClick = { viewModel.togglePin(note) }) {
                                             Icon(
-                                                if (note.isPinned) Icons.Default.PushPin else Icons.Default.OutlinedFlag,
+                                                if (note.isPinned) Icons.Default.Star else Icons.Default.FavoriteBorder,
                                                 contentDescription = "Pin",
                                                 tint = if (note.isPinned) Color(0xFFF59E0B) else Color.LightGray
                                             )
