@@ -1,4 +1,4 @@
-package com.pocket.app.ui.reminders
+﻿package com.pocket.app.ui.reminders
 
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.pocket.app.data.model.ItemCategory
 import com.pocket.app.data.model.PocketItem
 import com.pocket.app.ui.viewmodel.PocketViewModel
+import com.pocket.app.utils.LanguageHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,6 +32,7 @@ fun RemindersScreen(
     onBack: () -> Unit
 ) {
     val reminders by viewModel.reminders.collectAsState()
+    val language by viewModel.language.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<PocketItem?>(null) }
     val context = LocalContext.current
@@ -40,8 +42,16 @@ fun RemindersScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Reminders (நினைவூட்டல்)", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Text("மாத்திரை நேரம் & கட்டண நினைவூட்டல்", fontSize = 12.sp, color = Color.Gray)
+                        Text(
+                            LanguageHelper.text(language, "Reminders & Alarms", "நினைவூட்டல் & அலாரம்"),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                        Text(
+                            LanguageHelper.text(language, "Medicine time & bill alerts", "மாத்திரை நேரம் & கட்டண நினைவூட்டல்"),
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
                     }
                 },
                 navigationIcon = {
@@ -63,7 +73,11 @@ fun RemindersScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("புது அலாரம் (New Alarm)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(
+                    LanguageHelper.text(language, "New Alarm", "புது அலாரம்"),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
             }
         }
     ) { padding ->
@@ -87,13 +101,18 @@ fun RemindersScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "நினைவூட்டல்கள் எதுவும் இல்லை.",
+                            LanguageHelper.text(language, "No reminders yet.", "நினைவூட்டல்கள் எதுவும் இல்லை."),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            "மாத்திரை அல்லது கட்டண நேரத்திற்கு அலாரம் வைக்கலாம்.",
+                            LanguageHelper.text(
+                                language,
+                                "Tap + to set a medicine or bill alarm.",
+                                "மாத்திரை அல்லது கட்டண நேரத்திற்கு அலாரம் வைக்கலாம்."
+                            ),
                             fontSize = 13.sp,
                             color = Color.Gray
                         )
@@ -130,7 +149,10 @@ fun RemindersScreen(
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
                                         Text(
-                                            reminder.category.tamilName,
+                                            if (reminder.category == ItemCategory.MEDICAL)
+                                                LanguageHelper.text(language, "Medical", "மருத்துவம்")
+                                            else
+                                                LanguageHelper.text(language, "Bill / Finance", "கட்டணம்"),
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (reminder.category == ItemCategory.MEDICAL) Color(0xFF92400E) else Color(0xFF1E40AF),
@@ -189,24 +211,41 @@ fun RemindersScreen(
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("புது நினைவூட்டல் (Set Alarm)", fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    LanguageHelper.text(language, "Set Alarm", "புது அலாரம்"),
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = reminderTitle,
                         onValueChange = { reminderTitle = it },
-                        label = { Text("எதற்கு? (எ.கா: சுகர் மாத்திரை)") },
+                        label = {
+                            Text(
+                                LanguageHelper.text(language, "What is this for? (e.g. Sugar tablet)", "எதற்கு? (எ.கா: சுகர் மாத்திரை)")
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = reminderDesc,
                         onValueChange = { reminderDesc = it },
-                        label = { Text("விவரம் (எ.கா: உணவுக்குப் பின்)") },
+                        label = {
+                            Text(
+                                LanguageHelper.text(language, "Details (e.g. After food)", "விவரம் (எ.கா: உணவுக்குப் பின்)")
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     // Quick Preset Buttons for Seniors
-                    Text("விரைவு நேரம் (Quick Times):", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        LanguageHelper.text(language, "Quick Times:", "விரைவு நேரம்:"),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -222,7 +261,7 @@ fun RemindersScreen(
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(4.dp)
                         ) {
-                            Text("காலை 8 AM", fontSize = 11.sp)
+                            Text(LanguageHelper.text(language, "8 AM", "காலை 8 AM"), fontSize = 11.sp)
                         }
                         Button(
                             onClick = {
@@ -235,7 +274,7 @@ fun RemindersScreen(
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(4.dp)
                         ) {
-                            Text("மதியம் 1:30 PM", fontSize = 11.sp)
+                            Text(LanguageHelper.text(language, "1:30 PM", "மதியம் 1:30 PM"), fontSize = 11.sp)
                         }
                         Button(
                             onClick = {
@@ -248,7 +287,7 @@ fun RemindersScreen(
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(4.dp)
                         ) {
-                            Text("இரவு 8 PM", fontSize = 11.sp)
+                            Text(LanguageHelper.text(language, "8 PM", "இரவு 8 PM"), fontSize = 11.sp)
                         }
                     }
 
@@ -279,7 +318,14 @@ fun RemindersScreen(
                         val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
                         Icon(Icons.Default.Notifications, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("நேரம் மாற்றுக: ${sdf.format(selectedCalendar.time)}", fontWeight = FontWeight.Bold)
+                        Text(
+                            LanguageHelper.text(
+                                language,
+                                "Time: ${sdf.format(selectedCalendar.time)} (Tap to change)",
+                                "நேரம்: ${sdf.format(selectedCalendar.time)} (மாற்றுக)"
+                            ),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             },
@@ -298,12 +344,12 @@ fun RemindersScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
                 ) {
-                    Text("Set Alarm (அலாரம் வை)")
+                    Text(LanguageHelper.text(language, "Set Alarm", "அலாரம் வை"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text("Cancel")
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
                 }
             }
         )
@@ -313,8 +359,21 @@ fun RemindersScreen(
     itemToDelete?.let { rem ->
         AlertDialog(
             onDismissRequest = { itemToDelete = null },
-            title = { Text("அலாரத்தை நீக்க வேண்டுமா?") },
-            text = { Text("\"${rem.title}\" அலாரம் நீக்கப்படும்.") },
+            title = {
+                Text(
+                    LanguageHelper.text(language, "Delete Alarm?", "அலாரத்தை நீக்க வேண்டுமா?"),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    LanguageHelper.text(
+                        language,
+                        "Are you sure you want to delete `"${rem.title}`"?",
+                        "`"${rem.title}`" அலாரத்தை நிச்சயமாக நீக்க வேண்டுமா?"
+                    )
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -323,12 +382,12 @@ fun RemindersScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Delete")
+                    Text(LanguageHelper.text(language, "Delete", "நீக்கு"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text("Cancel")
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
                 }
             }
         )
