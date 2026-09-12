@@ -1,6 +1,7 @@
-package com.pocket.app.ui.vault
+﻿package com.pocket.app.ui.vault
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +28,7 @@ import com.pocket.app.data.model.ItemType
 import com.pocket.app.data.model.PocketItem
 import com.pocket.app.ui.viewmodel.PocketViewModel
 import com.pocket.app.utils.FileUtils
+import com.pocket.app.utils.LanguageHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,38 +38,42 @@ fun VaultScreen(
     viewModel: PocketViewModel,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val language by viewModel.language.collectAsState()
+
     val itemsFlow = if (targetType == ItemType.PHOTO) viewModel.photos else viewModel.documents
     val items by itemsFlow.collectAsState()
 
     val dbFoldersFlow = if (targetType == ItemType.PHOTO) viewModel.photoFolders else viewModel.docFolders
     val dbFolders by dbFoldersFlow.collectAsState()
 
-    val defaultPresets = remember(targetType) {
-        if (targetType == ItemType.PHOTO) {
-            listOf("Prescriptions (மருந்துச் சீட்டு)", "Bills (ரசீதுகள்)", "ID Cards (அடையாள அட்டை)", "Family (குடும்பம்)", "General (பொது)")
-        } else {
-            listOf("Medical Reports (மருத்துவ அறிக்கை)", "Bank & Finance (வங்கி)", "Property (பத்திரம்)", "Certificates (சான்றிதழ்)", "General (பொது)")
-        }
-    }
-
     var customFolders by remember { mutableStateOf<List<String>>(emptyList()) }
-    val allFolders = remember(defaultPresets, dbFolders, customFolders) {
-        (defaultPresets + dbFolders + customFolders).distinct()
+    val allFolders = remember(dbFolders, customFolders) {
+        (dbFolders + customFolders).filter { it.isNotBlank() && it != "General" }.distinct()
     }
 
     var selectedFolder by remember { mutableStateOf<String?>(null) }
     var itemToDelete by remember { mutableStateOf<PocketItem?>(null) }
     var itemToMove by remember { mutableStateOf<PocketItem?>(null) }
-    var showAddDialog by remember { mutableStateOf(false) }
     var showNewFolderDialog by remember { mutableStateOf(false) }
-    var selectedUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Direct File Picker: Picks and instantly saves without annoying popup
     val filePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            selectedUri = it
-            showAddDialog = true
+            viewModel.saveIncomingFile(
+                uri = it,
+                title = "",
+                category = ItemCategory.GENERAL,
+                folderName = selectedFolder ?: "General"
+            ) {
+                Toast.makeText(
+                    context,
+                    LanguageHelper.text(language, "Saved to Pocket!", "பாக்கெட்டில் சேமிக்கப்பட்டது!"),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -81,7 +88,10 @@ fun VaultScreen(
                     Column {
                         Text(title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Text(
-                            if (targetType == ItemType.PHOTO) "ஆல்பங்கள் & படங்கள் (Albums & Photos)" else "கோப்புகள் & ஆவணங்கள் (Folders & Docs)",
+                            if (targetType == ItemType.PHOTO)
+                                LanguageHelper.text(language, "Photos & Gallery", "படங்கள் & தொகுப்பு")
+                            else
+                                LanguageHelper.text(language, "Documents & PDF", "ஆவணங்கள் & PDF"),
                             fontSize = 12.sp,
                             color = Color.Gray
                         )
@@ -110,7 +120,10 @@ fun VaultScreen(
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    if (targetType == ItemType.PHOTO) "Add Photo (படம் சேர்)" else "Upload File (கோப்பு சேர்)",
+                    if (targetType == ItemType.PHOTO)
+                        LanguageHelper.text(language, "Add Photo", "படம் சேர்")
+                    else
+                        LanguageHelper.text(language, "Upload File", "கோப்பு சேர்"),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
@@ -123,7 +136,7 @@ fun VaultScreen(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Album / Folder Header Section
+            // Optional Folder Filter Header
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -137,33 +150,37 @@ fun VaultScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        if (targetType == ItemType.PHOTO) "📁 ஆல்பங்கள் (Albums)" else "📁 கோப்புறைகள் (Folders)",
+                        LanguageHelper.text(language, "📁 Folders", "📁 ஃபோல்டர்கள்"),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
                     TextButton(onClick = { showNewFolderDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("புதிய ஆல்பம் (+ New)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            LanguageHelper.text(language, "+ New Folder", "+ புதிய ஃபோல்டர்"),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
                     }
                 }
 
-                // Horizontal Album / Folder Cards
+                // Horizontal Folder Bar (All + user folders)
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // All Items Card
+                    // "All" Pill
                     item {
                         FolderBadgeCard(
-                            name = "அனைத்தும் (All)",
+                            name = LanguageHelper.text(language, "All", "அனைத்தும்"),
                             count = items.size,
                             isSelected = selectedFolder == null,
                             onClick = { selectedFolder = null }
                         )
                     }
 
-                    // Individual Folder Cards
+                    // User Created Folder Pills
                     items(allFolders) { folderName ->
                         val count = items.count { it.folderName == folderName }
                         FolderBadgeCard(
@@ -176,7 +193,7 @@ fun VaultScreen(
                 }
             }
 
-            Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             // Files List or Empty State
             if (filteredItems.isEmpty()) {
@@ -196,14 +213,29 @@ fun VaultScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            if (selectedFolder != null) "\"$selectedFolder\" ஆல்பத்தில் கோப்புகள் இல்லை." else "இங்கு கோப்புகள் எதுவும் இல்லை.",
+                            if (selectedFolder != null)
+                                LanguageHelper.text(
+                                    language,
+                                    "No files in folder `"$selectedFolder`".",
+                                    "`"$selectedFolder`" ஃபோல்டரில் கோப்புகள் இல்லை."
+                                )
+                            else
+                                LanguageHelper.text(
+                                    language,
+                                    "No files found here.",
+                                    "இங்கு கோப்புகள் எதுவும் இல்லை."
+                                ),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            "கீழே உள்ள + பட்டனை அழுத்தி கோப்புகளை சேர்க்கலாம்.",
+                            LanguageHelper.text(
+                                language,
+                                "Tap the + button below to add files.",
+                                "கீழே உள்ள + பட்டனை அழுத்தி கோப்புகளை சேர்க்கலாம்."
+                            ),
                             fontSize = 13.sp,
                             color = Color.Gray
                         )
@@ -218,6 +250,15 @@ fun VaultScreen(
                     items(filteredItems) { item ->
                         VaultItemCard(
                             item = item,
+                            onOpen = {
+                                item.filePath?.let { path ->
+                                    FileUtils.openFile(context, path)
+                                } ?: Toast.makeText(
+                                    context,
+                                    LanguageHelper.text(language, "File path not available", "கோப்பு கிடைக்கவில்லை"),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
                             onShare = { viewModel.shareItem(item) },
                             onTogglePin = { viewModel.togglePin(item) },
                             onMove = { itemToMove = item },
@@ -229,25 +270,30 @@ fun VaultScreen(
         }
     }
 
-    // Create New Folder / Album Dialog
+    // Create New Folder Dialog
     if (showNewFolderDialog) {
         var newFolderName by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showNewFolderDialog = false },
             title = {
                 Text(
-                    if (targetType == ItemType.PHOTO) "புதிய ஆல்பம் (New Album)" else "புதிய கோப்புறை (New Folder)",
+                    LanguageHelper.text(language, "New Folder", "புதிய ஃபோல்டர்"),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("ஆல்பத்தின் பெயரை தட்டச்சு செய்க:")
+                    Text(
+                        LanguageHelper.text(language, "Enter folder name:", "ஃபோல்டரின் பெயரை தட்டச்சு செய்க:")
+                    )
                     OutlinedTextField(
                         value = newFolderName,
                         onValueChange = { newFolderName = it },
-                        label = { Text("ஆல்பம் பெயர் (Album Name)") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = {
+                            Text(LanguageHelper.text(language, "Folder Name", "ஃபோல்டர் பெயர்"))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
                 }
             },
@@ -263,104 +309,57 @@ fun VaultScreen(
                     },
                     enabled = newFolderName.isNotBlank()
                 ) {
-                    Text("உருவாக்கு (Create)")
+                    Text(LanguageHelper.text(language, "Create", "உருவாக்கு"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showNewFolderDialog = false }) {
-                    Text("ரத்து (Cancel)")
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
                 }
             }
         )
     }
 
-    // Save File Dialog with Album Selector
-    if (showAddDialog && selectedUri != null) {
-        var inputTitle by remember { mutableStateOf("") }
-        var chosenFolder by remember { mutableStateOf(selectedFolder ?: allFolders.firstOrNull() ?: "General") }
-        var chosenCategory by remember { mutableStateOf(ItemCategory.MEDICAL) }
-
-        AlertDialog(
-            onDismissRequest = { showAddDialog = false },
-            title = { Text("Save to Pocket (சேமிக்க)", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedTextField(
-                        value = inputTitle,
-                        onValueChange = { inputTitle = it },
-                        label = { Text("பெயர் (File Name)") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Text(
-                        if (targetType == ItemType.PHOTO) "சேமிக்க வேண்டிய ஆல்பம் (Album):" else "சேமிக்க வேண்டிய கோப்புறை (Folder):",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-
-                    // Scrollable list of folders to pick
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 160.dp)
-                    ) {
-                        allFolders.forEach { folder ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { chosenFolder = folder }
-                                    .padding(vertical = 4.dp)
-                            ) {
-                                RadioButton(
-                                    selected = chosenFolder == folder,
-                                    onClick = { chosenFolder = folder }
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(folder, fontSize = 14.sp, fontWeight = if (chosenFolder == folder) FontWeight.Bold else FontWeight.Normal)
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        selectedUri?.let { uri ->
-                            viewModel.saveIncomingFile(
-                                uri = uri,
-                                title = inputTitle,
-                                category = chosenCategory,
-                                folderName = chosenFolder
-                            )
-                        }
-                        showAddDialog = false
-                    }
-                ) {
-                    Text("Save (சேமி)")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) {
-                    Text("Cancel (ரத்து)")
-                }
-            }
-        )
-    }
-
-    // Move to Another Album Dialog
+    // Move to Another Folder Dialog
     itemToMove?.let { item ->
         var targetFolder by remember { mutableStateOf(item.folderName) }
+        var customNewFolder by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { itemToMove = null },
-            title = { Text("ஆல்பம் மாற்றுக (Move to Album)", fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    LanguageHelper.text(language, "Move to Folder", "ஃபோல்டருக்கு மாற்று"),
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("\"${item.title}\" கோப்பை எந்த ஆல்பத்திற்கு மாற்ற வேண்டும்?")
-                    Column(modifier = Modifier.heightIn(max = 200.dp)) {
+                    Text(
+                        LanguageHelper.text(
+                            language,
+                            "Select folder for `"${item.title}`":",
+                            "`"${item.title}`" கோப்பை எந்த ஃபோல்டருக்கு மாற்ற வேண்டும்?"
+                        )
+                    )
+                    Column(modifier = Modifier.heightIn(max = 180.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { targetFolder = "General" }
+                                .padding(vertical = 4.dp)
+                        ) {
+                            RadioButton(
+                                selected = targetFolder == "General",
+                                onClick = { targetFolder = "General" }
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                LanguageHelper.text(language, "General (No folder)", "பொது (ஃபோல்டர் இல்லை)"),
+                                fontSize = 14.sp
+                            )
+                        }
+
                         allFolders.forEach { folder ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -378,21 +377,37 @@ fun VaultScreen(
                             }
                         }
                     }
+
+                    OutlinedTextField(
+                        value = customNewFolder,
+                        onValueChange = { customNewFolder = it },
+                        label = {
+                            Text(LanguageHelper.text(language, "Or type new folder name", "அல்லது புதிய பெயர்"))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.updateFolder(item, targetFolder)
+                        val finalFolder = if (customNewFolder.isNotBlank()) {
+                            customFolders = (customFolders + customNewFolder.trim()).distinct()
+                            customNewFolder.trim()
+                        } else {
+                            targetFolder
+                        }
+                        viewModel.updateFolder(item, finalFolder)
                         itemToMove = null
                     }
                 ) {
-                    Text("மாற்று (Move)")
+                    Text(LanguageHelper.text(language, "Move", "மாற்று"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToMove = null }) {
-                    Text("ரத்து (Cancel)")
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
                 }
             }
         )
@@ -402,8 +417,21 @@ fun VaultScreen(
     itemToDelete?.let { item ->
         AlertDialog(
             onDismissRequest = { itemToDelete = null },
-            title = { Text("நீக்க வேண்டுமா? (Delete)", fontWeight = FontWeight.Bold) },
-            text = { Text("\"${item.title}\" கோப்பை நிச்சயமாக நீக்க வேண்டுமா?") },
+            title = {
+                Text(
+                    LanguageHelper.text(language, "Delete File?", "கோப்பை நீக்கவா?"),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    LanguageHelper.text(
+                        language,
+                        "Are you sure you want to delete `"${item.title}`"?",
+                        "`"${item.title}`" கோப்பை நிச்சயமாக நீக்க வேண்டுமா?"
+                    )
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -412,12 +440,12 @@ fun VaultScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("நீக்கு (Delete)")
+                    Text(LanguageHelper.text(language, "Delete", "நீக்கு"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text("ரத்து (Cancel)")
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
                 }
             }
         )
@@ -435,32 +463,39 @@ fun FolderBadgeCard(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        modifier = Modifier.border(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-            shape = RoundedCornerShape(16.dp)
-        )
+        modifier = Modifier
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(16.dp)
+            )
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "📁",
-                fontSize = 18.sp
+                if (name.contains("All") || name.contains("அனைத்தும்")) "📂" else "📁",
+                fontSize = 16.sp
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                name,
+                fontSize = 13.sp,
+                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.4f)
+            ) {
                 Text(
-                    name,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    "$count items",
+                    count.toString(),
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    fontWeight = FontWeight.Bold,
+                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
         }
@@ -470,13 +505,16 @@ fun FolderBadgeCard(
 @Composable
 fun VaultItemCard(
     item: PocketItem,
+    onOpen: () -> Unit,
     onShare: () -> Unit,
     onTogglePin: () -> Unit,
     onMove: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onOpen() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -513,11 +551,14 @@ fun VaultItemCard(
                     Text(
                         item.title,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                         maxLines = 1
                     )
+                    val folderDisplay = if (item.folderName.isNotBlank() && item.folderName != "General") {
+                        "📁 ${item.folderName} • "
+                    } else ""
                     Text(
-                        "📁 ${item.folderName} • ${FileUtils.formatFileSize(item.fileSize)}",
+                        "$folderDisplay${FileUtils.formatFileSize(item.fileSize)}",
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
@@ -525,12 +566,13 @@ fun VaultItemCard(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Move / Folder button
+                // Folder / Move button
                 IconButton(onClick = onMove) {
                     Icon(
                         Icons.Default.Edit,
-                        contentDescription = "Move to Album",
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = "Move to Folder",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 // Pin button
@@ -538,15 +580,17 @@ fun VaultItemCard(
                     Icon(
                         Icons.Default.Star,
                         contentDescription = "Pin",
-                        tint = if (item.isPinned) Color(0xFFF59E0B) else Color.LightGray
+                        tint = if (item.isPinned) Color(0xFFF59E0B) else Color.LightGray,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                // Share button
+                // WhatsApp Share button
                 IconButton(onClick = onShare) {
                     Icon(
                         Icons.Default.Share,
                         contentDescription = "Share",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 // Delete button
@@ -554,7 +598,8 @@ fun VaultItemCard(
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = Color.Gray
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
