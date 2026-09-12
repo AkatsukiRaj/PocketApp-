@@ -1,4 +1,4 @@
-﻿package com.pocket.app.ui.notes
+package com.pocket.app.ui.notes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -236,8 +236,8 @@ fun NotesScreen(
                 Text(
                     LanguageHelper.text(
                         language,
-                        "Are you sure you want to delete `"${note.title}`"?",
-                        "`"${note.title}`" குறிப்பை நிச்சயமாக நீக்க வேண்டுமா?"
+                        "Are you sure you want to delete '${note.title}'?",
+                        "'${note.title}' குறிப்பை நிச்சயமாக நீக்க வேண்டுமா?"
                     )
                 )
             },
