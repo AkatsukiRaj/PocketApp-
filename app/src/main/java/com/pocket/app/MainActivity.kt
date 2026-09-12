@@ -1,12 +1,8 @@
 package com.pocket.app
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -19,7 +15,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,7 +24,6 @@ import com.pocket.app.data.model.ItemType
 import com.pocket.app.data.preferences.AppLanguage
 import com.pocket.app.ui.home.HomeScreen
 import com.pocket.app.ui.notes.NotesScreen
-import com.pocket.app.ui.reminders.RemindersScreen
 import com.pocket.app.ui.theme.PocketTheme
 import com.pocket.app.ui.vault.VaultScreen
 import com.pocket.app.ui.viewmodel.PocketViewModel
@@ -41,21 +35,14 @@ sealed class Screen(val route: String, val english: String, val tamil: String, v
     object Photos : Screen("photos", "Photos", "படங்கள்", Icons.Default.AccountBox)
     object Docs : Screen("docs", "Docs", "கோப்புகள்", Icons.Default.Info)
     object Notes : Screen("notes", "Notes", "குறிப்புகள்", Icons.Default.Edit)
-    object Reminders : Screen("reminders", "Alarms", "அலாரம்", Icons.Default.Notifications)
 }
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: PocketViewModel by viewModels()
 
-    private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { _ -> }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        checkNotificationPermission()
 
         setContent {
             val themeMode by viewModel.themeMode.collectAsState()
@@ -70,8 +57,7 @@ class MainActivity : ComponentActivity() {
                     Screen.Home,
                     Screen.Photos,
                     Screen.Docs,
-                    Screen.Notes,
-                    Screen.Reminders
+                    Screen.Notes
                 )
 
                 Scaffold(
@@ -157,13 +143,6 @@ class MainActivity : ComponentActivity() {
                                         restoreState = true
                                     }
                                 },
-                                onNavigateToReminders = {
-                                    navController.navigate(Screen.Reminders.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
                                 onOpenItem = { item ->
                                     if (item.filePath != null) {
                                         FileUtils.openFile(this@MainActivity, item.filePath)
@@ -171,7 +150,6 @@ class MainActivity : ComponentActivity() {
                                         if (item.itemType == ItemType.PHOTO) navController.navigate(Screen.Photos.route)
                                         else if (item.itemType == ItemType.DOCUMENT) navController.navigate(Screen.Docs.route)
                                         else if (item.itemType == ItemType.NOTE) navController.navigate(Screen.Notes.route)
-                                        else navController.navigate(Screen.Reminders.route)
                                     }
                                 }
                             )
@@ -201,23 +179,8 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() }
                             )
                         }
-
-                        composable(Screen.Reminders.route) {
-                            RemindersScreen(
-                                viewModel = viewModel,
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
                     }
                 }
-            }
-        }
-    }
-
-    private fun checkNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }

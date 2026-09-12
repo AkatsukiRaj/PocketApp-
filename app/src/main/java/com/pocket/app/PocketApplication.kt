@@ -4,7 +4,6 @@ import android.app.Application
 import com.pocket.app.data.local.PocketDatabase
 import com.pocket.app.data.preferences.AppPreferences
 import com.pocket.app.data.repository.PocketRepository
-import com.pocket.app.reminder.NotificationHelper
 
 class PocketApplication : Application() {
 
@@ -14,6 +13,5 @@ class PocketApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        NotificationHelper.createNotificationChannels(this)
     }
 }

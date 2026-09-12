@@ -40,7 +40,6 @@ fun HomeScreen(
     onNavigateToPhotos: () -> Unit,
     onNavigateToDocs: () -> Unit,
     onNavigateToNotes: () -> Unit,
-    onNavigateToReminders: () -> Unit,
     onOpenItem: (PocketItem) -> Unit
 ) {
     val language by viewModel.language.collectAsState()
@@ -49,7 +48,6 @@ fun HomeScreen(
     val photos by viewModel.photos.collectAsState()
     val docs by viewModel.documents.collectAsState()
     val notes by viewModel.notes.collectAsState()
-    val reminders by viewModel.reminders.collectAsState()
 
     val context = LocalContext.current
     var showSettings by remember { mutableStateOf(false) }
@@ -352,17 +350,6 @@ fun HomeScreen(
                 icon = Icons.Default.Edit,
                 gradient = Brush.horizontalGradient(listOf(Color(0xFF7C3AED), Color(0xFF6D28D9))),
                 onClick = onNavigateToNotes
-            )
-        }
-
-        item {
-            MainCategoryCard(
-                title = LanguageHelper.text(language, "Reminders & Alarms", "அலாரம் & நினைவூட்டல்"),
-                subtitle = LanguageHelper.text(language, "Medicine time, Bill alerts", "மாத்திரை நேரம், கட்டண அலாரம்"),
-                countText = "${reminders.size} " + LanguageHelper.text(language, "Alarms", "அலாரங்கள்"),
-                icon = Icons.Default.Notifications,
-                gradient = Brush.horizontalGradient(listOf(Color(0xFFD97706), Color(0xFFB45309))),
-                onClick = onNavigateToReminders
             )
         }
     }

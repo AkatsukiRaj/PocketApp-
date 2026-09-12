@@ -6,7 +6,6 @@ import com.pocket.app.data.local.PocketDao
 import com.pocket.app.data.model.ItemCategory
 import com.pocket.app.data.model.ItemType
 import com.pocket.app.data.model.PocketItem
-import com.pocket.app.reminder.ReminderScheduler
 import com.pocket.app.utils.FileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -124,9 +123,6 @@ class PocketRepository(
     }
 
     suspend fun deleteItem(item: PocketItem) = withContext(Dispatchers.IO) {
-        if (item.itemType == ItemType.REMINDER) {
-            ReminderScheduler.cancelReminder(context, item.id)
-        }
         item.filePath?.let { path ->
             val file = File(path)
             if (file.exists()) {
