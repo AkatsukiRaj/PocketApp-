@@ -1,4 +1,4 @@
-﻿package com.pocket.app.ui.vault
+package com.pocket.app.ui.vault
 
 import android.net.Uri
 import android.widget.Toast
@@ -216,8 +216,8 @@ fun VaultScreen(
                             if (selectedFolder != null)
                                 LanguageHelper.text(
                                     language,
-                                    "No files in folder `"$selectedFolder`".",
-                                    "`"$selectedFolder`" ஃபோல்டரில் கோப்புகள் இல்லை."
+                                    "No files in folder '$selectedFolder'.",
+                                    "'$selectedFolder' ஃபோல்டரில் கோப்புகள் இல்லை."
                                 )
                             else
                                 LanguageHelper.text(
@@ -337,8 +337,8 @@ fun VaultScreen(
                     Text(
                         LanguageHelper.text(
                             language,
-                            "Select folder for `"${item.title}`":",
-                            "`"${item.title}`" கோப்பை எந்த ஃபோல்டருக்கு மாற்ற வேண்டும்?"
+                            "Select folder for '${item.title}':",
+                            "'${item.title}' கோப்பை எந்த ஃபோல்டருக்கு மாற்ற வேண்டும்?"
                         )
                     )
                     Column(modifier = Modifier.heightIn(max = 180.dp)) {
@@ -427,8 +427,8 @@ fun VaultScreen(
                 Text(
                     LanguageHelper.text(
                         language,
-                        "Are you sure you want to delete `"${item.title}`"?",
-                        "`"${item.title}`" கோப்பை நிச்சயமாக நீக்க வேண்டுமா?"
+                        "Are you sure you want to delete '${item.title}'?",
+                        "'${item.title}' கோப்பை நிச்சயமாக நீக்க வேண்டுமா?"
                     )
                 )
             },
