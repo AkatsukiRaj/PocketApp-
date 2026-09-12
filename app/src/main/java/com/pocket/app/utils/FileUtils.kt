@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.pocket.app.data.model.ItemType
 import java.io.File
@@ -24,8 +25,20 @@ object FileUtils {
 
     fun saveUriToVault(context: Context, uri: Uri): Pair<File, String> {
         val contentResolver = context.contentResolver
-        val originalName = getFileName(context, uri) ?: "file_${System.currentTimeMillis()}"
-        val extension = getExtension(originalName)
+        var originalName = getFileName(context, uri) ?: "file_${System.currentTimeMillis()}"
+        var extension = getExtension(originalName)
+
+        if (extension.isEmpty()) {
+            val mimeFromResolver = contentResolver.getType(uri)
+            if (mimeFromResolver != null) {
+                val extFromMime = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeFromResolver)
+                if (!extFromMime.isNullOrEmpty()) {
+                    extension = extFromMime
+                    originalName = "$originalName.$extension"
+                }
+            }
+        }
+
         val safeName = "${UUID.randomUUID()}_$originalName"
         val destinationFile = File(getVaultDir(context), safeName)
 
@@ -93,6 +106,43 @@ object FileUtils {
         }
 
         context.startActivity(Intent.createChooser(shareIntent, "Share with"))
+    }
+
+    fun openFile(context: Context, filePath: String) {
+        try {
+            val file = File(filePath)
+            if (!file.exists()) {
+                Toast.makeText(context, "File not found / கோப்பு கிடைக்கவில்லை", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val contentUri: Uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+
+            val extension = getExtension(file.name)
+            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: getMimeType(context, file)
+
+            val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(contentUri, mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val chooser = Intent.createChooser(viewIntent, "Open with / திறக்க").apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Cannot open file / கோப்பைத் திறக்க முடியவில்லை: ${e.localizedMessage ?: ""}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     fun formatFileSize(sizeInBytes: Long): String {
