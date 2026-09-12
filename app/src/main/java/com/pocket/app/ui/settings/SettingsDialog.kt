@@ -1,4 +1,4 @@
-package com.pocket.app.ui.settings
+﻿package com.pocket.app.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pocket.app.data.preferences.AppLanguage
 import com.pocket.app.data.preferences.AppThemeMode
+import com.pocket.app.utils.LanguageHelper
 
 @Composable
 fun SettingsDialog(
@@ -25,7 +26,7 @@ fun SettingsDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                "அமைப்புகள் (Settings)",
+                LanguageHelper.text(currentLanguage, "Settings", "அமைப்புகள்"),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 20.sp
             )
@@ -35,7 +36,7 @@ fun SettingsDialog(
                 // Section 1: Language
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        "மொழி (Language)",
+                        LanguageHelper.text(currentLanguage, "Language", "மொழி"),
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
@@ -73,16 +74,28 @@ fun SettingsDialog(
                 // Section 2: Theme
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        "தீம் (Theme)",
+                        LanguageHelper.text(currentLanguage, "Theme", "தீம்"),
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
 
                     val themeOptions = listOf(
-                        Triple(AppThemeMode.SYSTEM, "System Default", "போன் அமைப்புப்படி (Follow System)"),
-                        Triple(AppThemeMode.SOFT_LIGHT, "Soft Light", "பகல் வெளிச்சம் (Eye-comfort Light)"),
-                        Triple(AppThemeMode.SOFT_DARK, "Soft Dark", "இரவு நேரம் (Soothing Dark)")
+                        Triple(
+                            AppThemeMode.SYSTEM,
+                            LanguageHelper.text(currentLanguage, "System Default", "போன் அமைப்புப்படி"),
+                            LanguageHelper.text(currentLanguage, "Follow phone theme", "போனின் அமைப்பைப் பின்பற்றும்")
+                        ),
+                        Triple(
+                            AppThemeMode.SOFT_LIGHT,
+                            LanguageHelper.text(currentLanguage, "Soft Light", "பகல் வெளிச்சம்"),
+                            LanguageHelper.text(currentLanguage, "Eye-comfort light theme", "கண்களுக்கு இதமான வெளிச்சம்")
+                        ),
+                        Triple(
+                            AppThemeMode.SOFT_DARK,
+                            LanguageHelper.text(currentLanguage, "Soft Dark", "இரவு நேரம்"),
+                            LanguageHelper.text(currentLanguage, "Soothing dark theme", "இரவு நேரத்திற்கு உகந்தது")
+                        )
                     )
 
                     themeOptions.forEach { (mode, title, desc) ->
@@ -112,7 +125,10 @@ fun SettingsDialog(
                 onClick = onDismiss,
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("முடிந்தது (Done)", fontWeight = FontWeight.Bold)
+                Text(
+                    LanguageHelper.text(currentLanguage, "Done", "முடிந்தது"),
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     )
