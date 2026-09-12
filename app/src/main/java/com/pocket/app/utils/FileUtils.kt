@@ -87,25 +87,63 @@ object FileUtils {
     }
 
     fun shareFile(context: Context, filePath: String, title: String) {
-        val file = File(filePath)
-        if (!file.exists()) return
+        try {
+            val file = File(filePath)
+            if (!file.exists()) {
+                Toast.makeText(context, "File not found / கோப்பு கிடைக்கவில்லை", Toast.LENGTH_SHORT).show()
+                return
+            }
 
-        val contentUri: Uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            file
-        )
+            val contentUri: Uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
 
-        val mimeType = getMimeType(context, file)
+            val mimeType = getMimeType(context, file)
 
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = mimeType
-            putExtra(Intent.EXTRA_STREAM, contentUri)
-            putExtra(Intent.EXTRA_SUBJECT, title)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                putExtra(Intent.EXTRA_SUBJECT, title)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val chooser = Intent.createChooser(shareIntent, "Share with / பகிர்க").apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            context.startActivity(chooser)
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Cannot share file / பகிர முடியவில்லை: ${e.localizedMessage ?: ""}",
+                Toast.LENGTH_LONG
+            ).show()
         }
+    }
 
-        context.startActivity(Intent.createChooser(shareIntent, "Share with"))
+    fun shareText(context: Context, text: String, title: String = "") {
+        try {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+                if (title.isNotBlank()) putExtra(Intent.EXTRA_SUBJECT, title)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            val chooser = Intent.createChooser(shareIntent, "Share with / பகிர்க").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Cannot share text / பகிர முடியவில்லை",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     fun openFile(context: Context, filePath: String) {
