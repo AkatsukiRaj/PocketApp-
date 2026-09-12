@@ -120,7 +120,7 @@ fun NotesScreen(
                                     Row {
                                         IconButton(onClick = { viewModel.togglePin(note) }) {
                                             Icon(
-                                                if (note.isPinned) Icons.Default.Star else Icons.Default.FavoriteBorder,
+                                                Icons.Default.Star,
                                                 contentDescription = "Pin",
                                                 tint = if (note.isPinned) Color(0xFFF59E0B) else Color.LightGray
                                             )

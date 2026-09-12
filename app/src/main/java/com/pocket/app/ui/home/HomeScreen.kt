@@ -128,7 +128,7 @@ fun HomeScreen(
                             .size(42.dp)
                     ) {
                         Icon(
-                            Icons.Default.Settings,
+                            Icons.Default.MoreVert,
                             contentDescription = "Settings",
                             tint = Color.White
                         )

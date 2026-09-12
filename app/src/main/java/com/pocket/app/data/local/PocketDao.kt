@@ -18,6 +18,12 @@ interface PocketDao {
     @Query("SELECT * FROM pocket_items WHERE itemType = :type ORDER BY createdAt DESC")
     fun getItemsByType(type: ItemType): Flow<List<PocketItem>>
 
+    @Query("SELECT * FROM pocket_items WHERE itemType = :type AND folderName = :folderName ORDER BY createdAt DESC")
+    fun getItemsByTypeAndFolder(type: ItemType, folderName: String): Flow<List<PocketItem>>
+
+    @Query("SELECT DISTINCT folderName FROM pocket_items WHERE itemType = :type AND folderName IS NOT NULL AND folderName != ''")
+    fun getFoldersForType(type: ItemType): Flow<List<String>>
+
     @Query("SELECT * FROM pocket_items WHERE itemType IN (:types) ORDER BY createdAt DESC")
     fun getItemsByTypes(types: List<ItemType>): Flow<List<PocketItem>>
 
@@ -44,6 +50,9 @@ interface PocketDao {
 
     @Query("DELETE FROM pocket_items WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("UPDATE pocket_items SET folderName = :newFolder WHERE id = :id")
+    suspend fun updateFolder(id: Long, newFolder: String)
 
     @Query("UPDATE pocket_items SET isPinned = :isPinned WHERE id = :id")
     suspend fun togglePin(id: Long, isPinned: Boolean)

@@ -30,6 +30,12 @@ class PocketViewModel(application: Application) : AndroidViewModel(application) 
     val documents: StateFlow<List<PocketItem>> = repository.getDocuments()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val photoFolders: StateFlow<List<String>> = repository.getFoldersForType(com.pocket.app.data.model.ItemType.PHOTO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val docFolders: StateFlow<List<String>> = repository.getFoldersForType(com.pocket.app.data.model.ItemType.DOCUMENT)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val notes: StateFlow<List<PocketItem>> = repository.getNotes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -44,10 +50,22 @@ class PocketViewModel(application: Application) : AndroidViewModel(application) 
         preferences.setThemeMode(newThemeMode)
     }
 
-    fun saveIncomingFile(uri: Uri, title: String, category: ItemCategory, onComplete: () -> Unit = {}) {
+    fun saveIncomingFile(
+        uri: Uri,
+        title: String,
+        category: ItemCategory,
+        folderName: String = "General",
+        onComplete: () -> Unit = {}
+    ) {
         viewModelScope.launch {
-            repository.saveIncomingUri(uri, title, category)
+            repository.saveIncomingUri(uri, title, category, folderName)
             onComplete()
+        }
+    }
+
+    fun updateFolder(item: PocketItem, newFolder: String) {
+        viewModelScope.launch {
+            repository.updateItemFolder(item.id, newFolder)
         }
     }
 

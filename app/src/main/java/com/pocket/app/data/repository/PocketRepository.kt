@@ -26,6 +26,8 @@ class PocketRepository(
 
     fun getDocuments(): Flow<List<PocketItem>> = dao.getItemsByType(ItemType.DOCUMENT)
 
+    fun getFoldersForType(type: ItemType): Flow<List<String>> = dao.getFoldersForType(type)
+
     fun getNotes(): Flow<List<PocketItem>> = dao.getItemsByType(ItemType.NOTE)
 
     fun getReminders(): Flow<List<PocketItem>> = dao.getItemsByType(ItemType.REMINDER)
@@ -37,7 +39,8 @@ class PocketRepository(
     suspend fun saveIncomingUri(
         uri: Uri,
         title: String,
-        category: ItemCategory
+        category: ItemCategory,
+        folderName: String = "General"
     ): PocketItem = withContext(Dispatchers.IO) {
         val (savedFile, originalName) = FileUtils.saveUriToVault(context, uri)
         val ext = FileUtils.getExtension(originalName)
@@ -49,6 +52,7 @@ class PocketRepository(
             description = originalName,
             itemType = type,
             category = category,
+            folderName = if (folderName.isNotBlank()) folderName else "General",
             filePath = savedFile.absolutePath,
             mimeType = mime,
             fileExtension = ext,
@@ -58,6 +62,10 @@ class PocketRepository(
 
         val id = dao.insertItem(item)
         item.copy(id = id)
+    }
+
+    suspend fun updateItemFolder(id: Long, newFolder: String) = withContext(Dispatchers.IO) {
+        dao.updateFolder(id, newFolder)
     }
 
     suspend fun createNote(

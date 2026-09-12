@@ -277,7 +277,7 @@ fun RemindersScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                        Icon(Icons.Default.DateRange, contentDescription = null)
+                        Icon(Icons.Default.Notifications, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("நேரம் மாற்றுக: ${sdf.format(selectedCalendar.time)}", fontWeight = FontWeight.Bold)
                     }

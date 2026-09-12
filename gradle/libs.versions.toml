@@ -1,14 +1,13 @@
 [versions]
 agp = "8.6.1"
 kotlin = "2.0.21"
-coreKtx = "1.15.0"
-lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.9.3"
-composeBom = "2024.11.00"
+coreKtx = "1.13.1"
+lifecycleRuntimeKtx = "2.8.4"
+activityCompose = "1.9.0"
+composeBom = "2024.06.00"
 room = "2.6.1"
 ksp = "2.0.21-1.0.28"
-glance = "1.1.1"
-navigationCompose = "2.8.4"
+navigationCompose = "2.7.7"
 coil = "2.7.0"
 coroutines = "1.9.0"
 
@@ -30,11 +29,6 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
-
-# Glance (AppWidget)
-androidx-glance = { group = "androidx.glance", name = "glance", version.ref = "glance" }
-androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
-androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 
 # Coil for Async Image Loading
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }

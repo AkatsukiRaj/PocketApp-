@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.pocket.app.data.model.PocketItem
 
-@Database(entities = [PocketItem::class], version = 1, exportSchema = false)
+@Database(entities = [PocketItem::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class PocketDatabase : RoomDatabase() {
 

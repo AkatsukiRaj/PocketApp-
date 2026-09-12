@@ -26,6 +26,7 @@ data class PocketItem(
     val description: String = "",
     val itemType: ItemType,
     val category: ItemCategory = ItemCategory.GENERAL,
+    val folderName: String = "General",
     val filePath: String? = null,
     val mimeType: String? = null,
     val fileExtension: String? = null,
