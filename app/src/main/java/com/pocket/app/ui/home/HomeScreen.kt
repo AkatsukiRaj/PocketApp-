@@ -17,13 +17,19 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import com.pocket.app.data.model.ItemType
 import com.pocket.app.data.model.PocketItem
 import com.pocket.app.data.preferences.AppLanguage
+import com.pocket.app.ui.preview.FilePreviewDialog
 import com.pocket.app.ui.settings.SettingsDialog
 import com.pocket.app.ui.viewmodel.PocketViewModel
+import com.pocket.app.utils.FileUtils
 import com.pocket.app.utils.LanguageHelper
+import java.io.File
 
 @Composable
 fun HomeScreen(
@@ -42,7 +48,9 @@ fun HomeScreen(
     val notes by viewModel.notes.collectAsState()
     val reminders by viewModel.reminders.collectAsState()
 
+    val context = LocalContext.current
     var showSettings by remember { mutableStateOf(false) }
+    var previewItem by remember { mutableStateOf<PocketItem?>(null) }
 
     if (showSettings) {
         SettingsDialog(
@@ -51,6 +59,22 @@ fun HomeScreen(
             onLanguageChange = { viewModel.setLanguage(it) },
             onThemeChange = { viewModel.setThemeMode(it) },
             onDismiss = { showSettings = false }
+        )
+    }
+
+    previewItem?.let { item ->
+        FilePreviewDialog(
+            item = item,
+            language = language,
+            onDismiss = { previewItem = null },
+            onOpenExternal = {
+                item.filePath?.let { FileUtils.openFile(context, it) }
+            },
+            onShare = { viewModel.shareItem(item) },
+            onDelete = {
+                viewModel.deleteItem(item)
+                previewItem = null
+            }
         )
     }
 
@@ -194,18 +218,64 @@ fun HomeScreen(
                             Card(
                                 modifier = Modifier
                                     .width(170.dp)
-                                    .clickable { onOpenItem(item) },
+                                    .clickable {
+                                        if (item.itemType == ItemType.PHOTO || item.itemType == ItemType.DOCUMENT) {
+                                            previewItem = item
+                                        } else {
+                                            onOpenItem(item)
+                                        }
+                                    },
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                                 shape = RoundedCornerShape(16.dp),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                             ) {
+                                val file = remember(item.filePath) { item.filePath?.let { File(it) } }
                                 Column(modifier = Modifier.padding(14.dp)) {
-                                    Icon(
-                                        Icons.Default.Star,
-                                        contentDescription = null,
-                                        tint = Color(0xFFF59E0B),
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        if (item.itemType == ItemType.PHOTO && file != null && file.exists()) {
+                                            AsyncImage(
+                                                model = file,
+                                                contentDescription = item.title,
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clip(RoundedCornerShape(8.dp)),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        } else if (item.itemType == ItemType.DOCUMENT) {
+                                            Surface(
+                                                color = Color(0xFFFEE2E2),
+                                                shape = RoundedCornerShape(8.dp),
+                                                modifier = Modifier.size(36.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Text(
+                                                        item.fileExtension.uppercase().ifBlank { "DOC" },
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFFDC2626)
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            Icon(
+                                                Icons.Default.Star,
+                                                contentDescription = null,
+                                                tint = Color(0xFFF59E0B),
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+
+                                        Icon(
+                                            Icons.Default.Star,
+                                            contentDescription = null,
+                                            tint = Color(0xFFF59E0B),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         item.title,
