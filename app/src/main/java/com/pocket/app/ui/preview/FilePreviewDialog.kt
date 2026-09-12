@@ -1,4 +1,4 @@
-﻿package com.pocket.app.ui.preview
+package com.pocket.app.ui.preview
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
@@ -209,7 +209,7 @@ fun FilePreviewDialog(
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
-                                        item.fileExtension.uppercase().ifBlank { "DOC" },
+                                        item.fileExtension?.uppercase()?.ifBlank { "DOC" } ?: "DOC",
                                         fontWeight = FontWeight.Black,
                                         fontSize = 18.sp,
                                         color = Color(0xFF4338CA)
