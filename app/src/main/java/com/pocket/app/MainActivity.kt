@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -32,6 +33,7 @@ import com.pocket.app.ui.reminders.RemindersScreen
 import com.pocket.app.ui.theme.PocketTheme
 import com.pocket.app.ui.vault.VaultScreen
 import com.pocket.app.ui.viewmodel.PocketViewModel
+import com.pocket.app.utils.FileUtils
 import com.pocket.app.utils.LanguageHelper
 
 sealed class Screen(val route: String, val english: String, val tamil: String, val icon: ImageVector) {
@@ -86,10 +88,22 @@ class MainActivity : ComponentActivity() {
                                     selected = selected,
                                     onClick = {
                                         if (currentRoute != screen.route) {
-                                            navController.navigate(screen.route) {
-                                                popUpTo(Screen.Home.route) { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true
+                                            if (screen.route == Screen.Home.route) {
+                                                if (!navController.popBackStack(Screen.Home.route, inclusive = false)) {
+                                                    navController.navigate(Screen.Home.route) {
+                                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                        launchSingleTop = true
+                                                        restoreState = true
+                                                    }
+                                                }
+                                            } else {
+                                                navController.navigate(screen.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
                                             }
                                         }
                                     },
@@ -122,22 +136,50 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.Home.route) {
                             HomeScreen(
                                 viewModel = viewModel,
-                                onNavigateToPhotos = { navController.navigate(Screen.Photos.route) },
-                                onNavigateToDocs = { navController.navigate(Screen.Docs.route) },
-                                onNavigateToNotes = { navController.navigate(Screen.Notes.route) },
-                                onNavigateToReminders = { navController.navigate(Screen.Reminders.route) },
+                                onNavigateToPhotos = {
+                                    navController.navigate(Screen.Photos.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onNavigateToDocs = {
+                                    navController.navigate(Screen.Docs.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onNavigateToNotes = {
+                                    navController.navigate(Screen.Notes.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onNavigateToReminders = {
+                                    navController.navigate(Screen.Reminders.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
                                 onOpenItem = { item ->
-                                    if (item.itemType == ItemType.PHOTO) navController.navigate(Screen.Photos.route)
-                                    else if (item.itemType == ItemType.DOCUMENT) navController.navigate(Screen.Docs.route)
-                                    else if (item.itemType == ItemType.NOTE) navController.navigate(Screen.Notes.route)
-                                    else navController.navigate(Screen.Reminders.route)
+                                    if (item.filePath != null) {
+                                        FileUtils.openFile(this@MainActivity, item.filePath)
+                                    } else {
+                                        if (item.itemType == ItemType.PHOTO) navController.navigate(Screen.Photos.route)
+                                        else if (item.itemType == ItemType.DOCUMENT) navController.navigate(Screen.Docs.route)
+                                        else if (item.itemType == ItemType.NOTE) navController.navigate(Screen.Notes.route)
+                                        else navController.navigate(Screen.Reminders.route)
+                                    }
                                 }
                             )
                         }
 
                         composable(Screen.Photos.route) {
                             VaultScreen(
-                                title = LanguageHelper.text(language, "Photos & Album", "படங்கள் & ஆல்பம்"),
+                                title = LanguageHelper.text(language, "Photos & Gallery", "படங்கள் & தொகுப்பு"),
                                 targetType = ItemType.PHOTO,
                                 viewModel = viewModel,
                                 onBack = { navController.popBackStack() }
@@ -146,7 +188,7 @@ class MainActivity : ComponentActivity() {
 
                         composable(Screen.Docs.route) {
                             VaultScreen(
-                                title = LanguageHelper.text(language, "Documents (PDF & Excel)", "ஆவணங்கள் (PDF & Excel)"),
+                                title = LanguageHelper.text(language, "Documents & PDF", "ஆவணங்கள் & PDF"),
                                 targetType = ItemType.DOCUMENT,
                                 viewModel = viewModel,
                                 onBack = { navController.popBackStack() }
