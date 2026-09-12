@@ -1,4 +1,4 @@
-package com.pocket.app.ui.vault
+﻿package com.pocket.app.ui.vault
 
 import android.net.Uri
 import android.widget.Toast
@@ -18,17 +18,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.pocket.app.data.model.ItemCategory
 import com.pocket.app.data.model.ItemType
 import com.pocket.app.data.model.PocketItem
+import com.pocket.app.ui.preview.FilePreviewDialog
 import com.pocket.app.ui.viewmodel.PocketViewModel
 import com.pocket.app.utils.FileUtils
 import com.pocket.app.utils.LanguageHelper
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +60,7 @@ fun VaultScreen(
     var selectedFolder by remember { mutableStateOf<String?>(null) }
     var itemToDelete by remember { mutableStateOf<PocketItem?>(null) }
     var itemToMove by remember { mutableStateOf<PocketItem?>(null) }
+    var previewItem by remember { mutableStateOf<PocketItem?>(null) }
     var showNewFolderDialog by remember { mutableStateOf(false) }
 
     // Direct File Picker: Picks and instantly saves without annoying popup
@@ -250,15 +256,7 @@ fun VaultScreen(
                     items(filteredItems) { item ->
                         VaultItemCard(
                             item = item,
-                            onOpen = {
-                                item.filePath?.let { path ->
-                                    FileUtils.openFile(context, path)
-                                } ?: Toast.makeText(
-                                    context,
-                                    LanguageHelper.text(language, "File path not available", "கோப்பு கிடைக்கவில்லை"),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            },
+                            onPreview = { previewItem = item },
                             onShare = { viewModel.shareItem(item) },
                             onTogglePin = { viewModel.togglePin(item) },
                             onMove = { itemToMove = item },
@@ -268,6 +266,23 @@ fun VaultScreen(
                 }
             }
         }
+    }
+
+    // In-App File Preview Dialog
+    previewItem?.let { item ->
+        FilePreviewDialog(
+            item = item,
+            language = language,
+            onDismiss = { previewItem = null },
+            onOpenExternal = {
+                item.filePath?.let { FileUtils.openFile(context, it) }
+            },
+            onShare = { viewModel.shareItem(item) },
+            onDelete = {
+                itemToDelete = item
+                previewItem = null
+            }
+        )
     }
 
     // Create New Folder Dialog
@@ -505,24 +520,30 @@ fun FolderBadgeCard(
 @Composable
 fun VaultItemCard(
     item: PocketItem,
-    onOpen: () -> Unit,
+    onPreview: () -> Unit,
     onShare: () -> Unit,
     onTogglePin: () -> Unit,
     onMove: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val file = remember(item.filePath) { item.filePath?.let { File(it) } }
+    val isPdf = remember(item) {
+        item.fileExtension.equals("pdf", ignoreCase = true) ||
+                (file != null && file.name.endsWith(".pdf", ignoreCase = true))
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpen() },
-        shape = RoundedCornerShape(16.dp),
+            .clickable { onPreview() },
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -530,22 +551,55 @@ fun VaultItemCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            if (item.itemType == ItemType.PHOTO) Color(0xFFDBEAFE) else Color(0xFFD1FAE5),
-                            RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        if (item.itemType == ItemType.PHOTO) Icons.Default.AccountBox else Icons.Default.Info,
-                        contentDescription = null,
-                        tint = if (item.itemType == ItemType.PHOTO) Color(0xFF2563EB) else Color(0xFF059669),
-                        modifier = Modifier.size(26.dp)
+                // Visual Thumbnail or Stylish File Badge
+                if (item.itemType == ItemType.PHOTO && file != null && file.exists()) {
+                    AsyncImage(
+                        model = file,
+                        contentDescription = item.title,
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.LightGray.copy(alpha = 0.2f)),
+                        contentScale = ContentScale.Crop
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .background(
+                                if (isPdf) Color(0xFFFEE2E2)
+                                else if (item.itemType == ItemType.PHOTO) Color(0xFFDBEAFE)
+                                else Color(0xFFD1FAE5),
+                                RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isPdf) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    "PDF",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFFDC2626)
+                                )
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        } else {
+                            Icon(
+                                if (item.itemType == ItemType.PHOTO) Icons.Default.AccountBox else Icons.Default.Info,
+                                contentDescription = null,
+                                tint = if (item.itemType == ItemType.PHOTO) Color(0xFF2563EB) else Color(0xFF059669),
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    }
                 }
+
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
@@ -566,12 +620,21 @@ fun VaultItemCard(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // Preview Eye button
+                IconButton(onClick = onPreview) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Preview",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
                 // Folder / Move button
                 IconButton(onClick = onMove) {
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "Move to Folder",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color.Gray,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -589,7 +652,7 @@ fun VaultItemCard(
                     Icon(
                         Icons.Default.Share,
                         contentDescription = "Share",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color(0xFF16A34A),
                         modifier = Modifier.size(20.dp)
                     )
                 }
