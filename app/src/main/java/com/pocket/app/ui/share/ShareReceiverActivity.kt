@@ -6,23 +6,10 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.pocket.app.PocketApplication
 import com.pocket.app.data.model.ItemCategory
-import com.pocket.app.ui.theme.PocketTheme
+import com.pocket.app.data.model.ItemType
 import com.pocket.app.utils.FileUtils
 import kotlinx.coroutines.launch
 
@@ -31,6 +18,17 @@ class ShareReceiverActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val action = intent.action
+        if (action == Intent.ACTION_SEND) {
+            handleSingleSend()
+        } else if (action == Intent.ACTION_SEND_MULTIPLE) {
+            handleMultipleSend()
+        } else {
+            finish()
+        }
+    }
+
+    private fun handleSingleSend() {
         val uri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
         } else {
@@ -38,127 +36,98 @@ class ShareReceiverActivity : ComponentActivity() {
             intent.getParcelableExtra(Intent.EXTRA_STREAM)
         }
 
-        if (uri == null) {
-            Toast.makeText(this, "கோப்பு கிடைக்கவில்லை (No file received)", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
-
-        val detectedName = FileUtils.getFileName(this, uri) ?: "Shared_File"
-
-        setContent {
-            PocketTheme {
-                ShareReceiverDialog(
-                    fileName = detectedName,
-                    onSave = { title, category ->
-                        saveFileAndFinish(uri, title, category)
-                    },
-                    onCancel = { finish() }
-                )
+        if (uri != null) {
+            val app = application as PocketApplication
+            lifecycleScope.launch {
+                try {
+                    val detectedName = FileUtils.getFileName(this@ShareReceiverActivity, uri) ?: "Shared_File"
+                    val savedItem = app.repository.saveIncomingUri(
+                        uri = uri,
+                        title = detectedName,
+                        category = ItemCategory.GENERAL,
+                        folderName = "General"
+                    )
+                    val toastMessage = if (savedItem.itemType == ItemType.PHOTO) {
+                        "புகைப்படம் பாக்கெட்டில் சேமிக்கப்பட்டது! ✓\n(Photo saved to Pocket!)"
+                    } else {
+                        "ஆவணம் பாக்கெட்டில் சேமிக்கப்பட்டது! ✓\n(Document saved to Pocket!)"
+                    }
+                    Toast.makeText(applicationContext, toastMessage, Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(applicationContext, "சேமிப்பதில் பிழை / Error saving: ${e.localizedMessage ?: ""}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    finish()
+                }
             }
-        }
-    }
-
-    private fun saveFileAndFinish(uri: Uri, title: String, category: ItemCategory) {
-        val app = application as PocketApplication
-        lifecycleScope.launch {
-            try {
-                app.repository.saveIncomingUri(uri, title, category)
-                Toast.makeText(this@ShareReceiverActivity, "பாக்கெட்டில் வெற்றிகரமாக சேமிக்கப்பட்டது! ✓", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) {
-                Toast.makeText(this@ShareReceiverActivity, "Error saving file: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-            } finally {
+        } else {
+            val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+            if (!text.isNullOrBlank()) {
+                val app = application as PocketApplication
+                lifecycleScope.launch {
+                    try {
+                        app.repository.createNote(
+                            title = "Shared Note",
+                            content = text,
+                            category = ItemCategory.GENERAL
+                        )
+                        Toast.makeText(applicationContext, "குறிப்பு பாக்கெட்டில் சேமிக்கப்பட்டது! ✓\n(Note saved to Pocket!)", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(applicationContext, "சேமிப்பதில் பிழை / Error saving: ${e.localizedMessage ?: ""}", Toast.LENGTH_SHORT).show()
+                    } finally {
+                        finish()
+                    }
+                }
+            } else {
+                Toast.makeText(applicationContext, "கோப்பு எதுவும் பெறப்படவில்லை (No file received)", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
     }
-}
 
-@Composable
-fun ShareReceiverDialog(
-    fileName: String,
-    onSave: (String, ItemCategory) -> Unit,
-    onCancel: () -> Unit
-) {
-    var title by remember { mutableStateOf(fileName) }
-    var selectedCategory by remember { mutableStateOf(ItemCategory.MEDICAL) }
+    private fun handleMultipleSend() {
+        val uris: ArrayList<Uri>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+        }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f)),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Text(
-                    "Pocket-ல் சேமிக்க (Save to Pocket)",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("கோப்பின் பெயர் (Name)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Text("எந்த பகுதியில் சேர்க்க வேண்டும்?", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ItemCategory.values().forEach { cat ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selectedCategory = cat }
-                                .padding(vertical = 4.dp)
-                        ) {
-                            RadioButton(
-                                selected = selectedCategory == cat,
-                                onClick = { selectedCategory = cat }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "${cat.displayName} (${cat.tamilName})",
-                                fontSize = 15.sp,
-                                fontWeight = if (selectedCategory == cat) FontWeight.Bold else FontWeight.Normal
-                            )
+        if (!uris.isNullOrEmpty()) {
+            val app = application as PocketApplication
+            lifecycleScope.launch {
+                var photoCount = 0
+                var docCount = 0
+                try {
+                    for (u in uris) {
+                        val detectedName = FileUtils.getFileName(this@ShareReceiverActivity, u) ?: "Shared_File"
+                        val saved = app.repository.saveIncomingUri(
+                            uri = u,
+                            title = detectedName,
+                            category = ItemCategory.GENERAL,
+                            folderName = "General"
+                        )
+                        if (saved.itemType == ItemType.PHOTO) {
+                            photoCount++
+                        } else {
+                            docCount++
                         }
                     }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = onCancel) {
-                        Text("ரத்து (Cancel)", fontSize = 15.sp)
+                    val total = photoCount + docCount
+                    val toastMessage = when {
+                        photoCount > 0 && docCount == 0 -> "$photoCount புகைப்படங்கள் பாக்கெட்டில் சேமிக்கப்பட்டன! ✓\n($photoCount Photos saved!)"
+                        docCount > 0 && photoCount == 0 -> "$docCount ஆவணங்கள் பாக்கெட்டில் சேமிக்கப்பட்டன! ✓\n($docCount Documents saved!)"
+                        else -> "$total கோப்புகள் பாக்கெட்டில் சேமிக்கப்பட்டன! ✓\n($total Files saved!)"
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { onSave(title, selectedCategory) },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("சேமி (Save)", fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    }
+                    Toast.makeText(applicationContext, toastMessage, Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(applicationContext, "சேமிப்பதில் பிழை / Error saving: ${e.localizedMessage ?: ""}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    finish()
                 }
             }
+        } else {
+            Toast.makeText(applicationContext, "கோப்புகள் எதுவும் பெறப்படவில்லை (No files received)", Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
 }

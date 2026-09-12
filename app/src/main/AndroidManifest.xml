@@ -35,6 +35,8 @@
             android:name=".ui.share.ShareReceiverActivity"
             android:exported="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:label="@string/save_to_pocket">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

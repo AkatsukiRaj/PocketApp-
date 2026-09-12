@@ -39,13 +39,15 @@ class PocketRepository(
     suspend fun saveIncomingUri(
         uri: Uri,
         title: String,
-        category: ItemCategory,
+        category: ItemCategory = ItemCategory.GENERAL,
         folderName: String = "General"
     ): PocketItem = withContext(Dispatchers.IO) {
         val (savedFile, originalName) = FileUtils.saveUriToVault(context, uri)
         val ext = FileUtils.getExtension(originalName)
-        val type = FileUtils.determineItemType(ext)
-        val mime = FileUtils.getMimeType(context, savedFile)
+        val resolverMime = try { context.contentResolver.getType(uri) } catch (e: Exception) { null }
+        val fileMime = FileUtils.getMimeType(context, savedFile)
+        val mime = resolverMime ?: fileMime
+        val type = FileUtils.determineItemType(ext, mime)
 
         val item = PocketItem(
             title = if (title.isNotBlank()) title else originalName,

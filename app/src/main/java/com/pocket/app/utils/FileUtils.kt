@@ -28,14 +28,19 @@ object FileUtils {
         var originalName = getFileName(context, uri) ?: "file_${System.currentTimeMillis()}"
         var extension = getExtension(originalName)
 
-        if (extension.isEmpty()) {
-            val mimeFromResolver = contentResolver.getType(uri)
-            if (mimeFromResolver != null) {
-                val extFromMime = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeFromResolver)
-                if (!extFromMime.isNullOrEmpty()) {
-                    extension = extFromMime
-                    originalName = "$originalName.$extension"
-                }
+        val mimeFromResolver = try { contentResolver.getType(uri) } catch (e: Exception) { null }
+
+        if (extension.isEmpty() && mimeFromResolver != null) {
+            val extFromMime = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeFromResolver)
+            if (!extFromMime.isNullOrEmpty()) {
+                extension = extFromMime
+                originalName = "$originalName.$extension"
+            } else if (mimeFromResolver.startsWith("image/", ignoreCase = true)) {
+                extension = "jpg"
+                originalName = "$originalName.jpg"
+            } else if (mimeFromResolver.equals("application/pdf", ignoreCase = true)) {
+                extension = "pdf"
+                originalName = "$originalName.pdf"
             }
         }
 
@@ -74,9 +79,12 @@ object FileUtils {
         }
     }
 
-    fun determineItemType(extension: String): ItemType {
+    fun determineItemType(extension: String, mimeType: String? = null): ItemType {
+        if (mimeType?.startsWith("image/", ignoreCase = true) == true) {
+            return ItemType.PHOTO
+        }
         return when (extension.lowercase()) {
-            "jpg", "jpeg", "png", "webp", "gif", "bmp" -> ItemType.PHOTO
+            "jpg", "jpeg", "png", "webp", "gif", "bmp", "heic", "heif", "svg" -> ItemType.PHOTO
             else -> ItemType.DOCUMENT
         }
     }
