@@ -1,5 +1,6 @@
 package com.pocket.app.ui.home
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -76,6 +77,15 @@ fun HomeScreen(
             onDelete = {
                 viewModel.deleteItem(item)
                 previewItem = null
+            },
+            onRename = { newTitle ->
+                viewModel.renameItem(item, newTitle) {
+                    Toast.makeText(
+                        context,
+                        LanguageHelper.text(language, "Renamed successfully! ✓", "பெயர் மாற்றப்பட்டது! ✓"),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         )
     }

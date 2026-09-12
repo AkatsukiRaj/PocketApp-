@@ -70,6 +70,10 @@ class PocketRepository(
         dao.updateFolder(id, newFolder)
     }
 
+    suspend fun renameItem(id: Long, newTitle: String) = withContext(Dispatchers.IO) {
+        dao.updateTitle(id, newTitle)
+    }
+
     suspend fun createNote(
         title: String,
         content: String,

@@ -54,6 +54,9 @@ interface PocketDao {
     @Query("UPDATE pocket_items SET folderName = :newFolder WHERE id = :id")
     suspend fun updateFolder(id: Long, newFolder: String)
 
+    @Query("UPDATE pocket_items SET title = :newTitle WHERE id = :id")
+    suspend fun updateTitle(id: Long, newTitle: String)
+
     @Query("UPDATE pocket_items SET isPinned = :isPinned WHERE id = :id")
     suspend fun togglePin(id: Long, isPinned: Boolean)
 

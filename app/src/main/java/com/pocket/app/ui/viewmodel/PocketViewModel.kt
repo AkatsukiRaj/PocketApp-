@@ -69,6 +69,13 @@ class PocketViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun renameItem(item: PocketItem, newTitle: String, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            repository.renameItem(item.id, newTitle)
+            onComplete()
+        }
+    }
+
     fun addNote(title: String, content: String, category: ItemCategory = ItemCategory.GENERAL) {
         viewModelScope.launch {
             repository.createNote(title, content, category)

@@ -1,4 +1,4 @@
-﻿package com.pocket.app.ui.vault
+package com.pocket.app.ui.vault
 
 import android.net.Uri
 import android.widget.Toast
@@ -60,6 +60,7 @@ fun VaultScreen(
     var selectedFolder by remember { mutableStateOf<String?>(null) }
     var itemToDelete by remember { mutableStateOf<PocketItem?>(null) }
     var itemToMove by remember { mutableStateOf<PocketItem?>(null) }
+    var itemToRename by remember { mutableStateOf<PocketItem?>(null) }
     var previewItem by remember { mutableStateOf<PocketItem?>(null) }
     var showNewFolderDialog by remember { mutableStateOf(false) }
 
@@ -257,6 +258,7 @@ fun VaultScreen(
                         VaultItemCard(
                             item = item,
                             onPreview = { previewItem = item },
+                            onRename = { itemToRename = item },
                             onShare = { viewModel.shareItem(item) },
                             onTogglePin = { viewModel.togglePin(item) },
                             onMove = { itemToMove = item },
@@ -281,6 +283,82 @@ fun VaultScreen(
             onDelete = {
                 itemToDelete = item
                 previewItem = null
+            },
+            onRename = { newTitle ->
+                viewModel.renameItem(item, newTitle) {
+                    Toast.makeText(
+                        context,
+                        LanguageHelper.text(language, "Renamed successfully! ✓", "பெயர் மாற்றப்பட்டது! ✓"),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        )
+    }
+
+    // Rename Item Dialog
+    itemToRename?.let { item ->
+        var renameText by remember { mutableStateOf(item.title) }
+        AlertDialog(
+            onDismissRequest = { itemToRename = null },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        LanguageHelper.text(language, "Rename File", "கோப்பின் பெயரை மாற்று"),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        LanguageHelper.text(language, "Enter new file name:", "புதிய பெயரை உள்ளிடவும்:"),
+                        fontSize = 13.sp,
+                        color = Color.Gray
+                    )
+                    OutlinedTextField(
+                        value = renameText,
+                        onValueChange = { renameText = it },
+                        label = {
+                            Text(LanguageHelper.text(language, "File Name", "கோப்பு பெயர்"))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        trailingIcon = {
+                            if (renameText.isNotEmpty()) {
+                                IconButton(onClick = { renameText = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                }
+                            }
+                        }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = renameText.trim()
+                        if (trimmed.isNotBlank()) {
+                            viewModel.renameItem(item, trimmed) {
+                                Toast.makeText(
+                                    context,
+                                    LanguageHelper.text(language, "Renamed successfully! ✓", "பெயர் மாற்றப்பட்டது! ✓"),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            itemToRename = null
+                        }
+                    }
+                ) {
+                    Text(LanguageHelper.text(language, "Save", "சேமி"), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemToRename = null }) {
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
+                }
             }
         )
     }
@@ -524,7 +602,8 @@ fun VaultItemCard(
     onShare: () -> Unit,
     onTogglePin: () -> Unit,
     onMove: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onRename: (() -> Unit)? = null
 ) {
     val file = remember(item.filePath) { item.filePath?.let { File(it) } }
     val isPdf = remember(item) {
@@ -629,10 +708,21 @@ fun VaultItemCard(
                         modifier = Modifier.size(22.dp)
                     )
                 }
+                // Rename button
+                if (onRename != null) {
+                    IconButton(onClick = onRename) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Rename",
+                            tint = Color(0xFF6366F1),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
                 // Folder / Move button
                 IconButton(onClick = onMove) {
                     Icon(
-                        Icons.Default.Edit,
+                        Icons.Default.DriveFileMove,
                         contentDescription = "Move to Folder",
                         tint = Color.Gray,
                         modifier = Modifier.size(20.dp)
