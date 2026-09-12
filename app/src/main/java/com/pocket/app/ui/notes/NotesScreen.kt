@@ -1,4 +1,4 @@
-package com.pocket.app.ui.notes
+﻿package com.pocket.app.ui.notes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pocket.app.data.model.PocketItem
 import com.pocket.app.ui.viewmodel.PocketViewModel
+import com.pocket.app.utils.LanguageHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +26,7 @@ fun NotesScreen(
     onBack: () -> Unit
 ) {
     val notes by viewModel.notes.collectAsState()
+    val language by viewModel.language.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<PocketItem?>(null) }
 
@@ -33,8 +35,16 @@ fun NotesScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Smart Notes", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Text("குறிப்புகள் & நினைவுக் குறிப்புகள்", fontSize = 12.sp, color = Color.Gray)
+                        Text(
+                            LanguageHelper.text(language, "Smart Notes", "குறிப்புகள்"),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                        Text(
+                            LanguageHelper.text(language, "Quick notes & checklists", "குறிப்புகள் & நினைவுக் குறிப்புகள்"),
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
                     }
                 },
                 navigationIcon = {
@@ -56,7 +66,11 @@ fun NotesScreen(
             ) {
                 Icon(Icons.Default.Edit, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("புது குறிப்பு (New Note)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(
+                    LanguageHelper.text(language, "New Note", "புது குறிப்பு"),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
             }
         }
     ) { padding ->
@@ -80,13 +94,18 @@ fun NotesScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "குறிப்புகள் எதுவும் இல்லை.",
+                            LanguageHelper.text(language, "No notes yet.", "குறிப்புகள் எதுவும் இல்லை."),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            "+ பட்டனை அழுத்தி மளிகை பட்டியல் அல்லது மருத்துவ குறிப்பை எழுதலாம்.",
+                            LanguageHelper.text(
+                                language,
+                                "Tap + to write a grocery list or note.",
+                                "+ பட்டனை அழுத்தி மளிகை பட்டியல் அல்லது குறிப்பை எழுதலாம்."
+                            ),
                             fontSize = 13.sp,
                             color = Color.Gray
                         )
@@ -152,20 +171,29 @@ fun NotesScreen(
 
         AlertDialog(
             onDismissRequest = { showCreateDialog = false },
-            title = { Text("புது குறிப்பு (Write Note)", fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    LanguageHelper.text(language, "New Note", "புது குறிப்பு"),
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = noteTitle,
                         onValueChange = { noteTitle = it },
-                        label = { Text("தலைப்பு (Title)") },
+                        label = {
+                            Text(LanguageHelper.text(language, "Title", "தலைப்பு"))
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = noteContent,
                         onValueChange = { noteContent = it },
-                        label = { Text("விவரம் (Description)") },
+                        label = {
+                            Text(LanguageHelper.text(language, "Description", "விவரம்"))
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(140.dp),
@@ -183,12 +211,12 @@ fun NotesScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
                 ) {
-                    Text("Save (சேமி)")
+                    Text(LanguageHelper.text(language, "Save", "சேமி"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCreateDialog = false }) {
-                    Text("Cancel")
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
                 }
             }
         )
@@ -198,8 +226,21 @@ fun NotesScreen(
     itemToDelete?.let { note ->
         AlertDialog(
             onDismissRequest = { itemToDelete = null },
-            title = { Text("குறிப்பை நீக்க வேண்டுமா?") },
-            text = { Text("\"${note.title}\" குறிப்பு நிரந்தரமாக நீக்கப்படும்.") },
+            title = {
+                Text(
+                    LanguageHelper.text(language, "Delete Note?", "குறிப்பை நீக்கவா?"),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    LanguageHelper.text(
+                        language,
+                        "Are you sure you want to delete `"${note.title}`"?",
+                        "`"${note.title}`" குறிப்பை நிச்சயமாக நீக்க வேண்டுமா?"
+                    )
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -208,12 +249,12 @@ fun NotesScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Delete")
+                    Text(LanguageHelper.text(language, "Delete", "நீக்கு"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text("Cancel")
+                    Text(LanguageHelper.text(language, "Cancel", "ரத்து"))
                 }
             }
         )
