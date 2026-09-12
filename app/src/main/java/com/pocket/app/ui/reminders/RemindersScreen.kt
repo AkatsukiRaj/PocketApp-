@@ -1,4 +1,4 @@
-﻿package com.pocket.app.ui.reminders
+package com.pocket.app.ui.reminders
 
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
@@ -369,8 +369,8 @@ fun RemindersScreen(
                 Text(
                     LanguageHelper.text(
                         language,
-                        "Are you sure you want to delete `"${rem.title}`"?",
-                        "`"${rem.title}`" அலாரத்தை நிச்சயமாக நீக்க வேண்டுமா?"
+                        "Are you sure you want to delete '${rem.title}'?",
+                        "'${rem.title}' அலாரத்தை நிச்சயமாக நீக்க வேண்டுமா?"
                     )
                 )
             },
