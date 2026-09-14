@@ -17,9 +17,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -213,7 +215,7 @@ fun VaultScreen(
                         modifier = Modifier.padding(32.dp)
                     ) {
                         Icon(
-                            if (targetType == ItemType.PHOTO) Icons.Default.AccountBox else Icons.Default.Info,
+                            if (targetType == ItemType.PHOTO) Icons.Default.PhotoLibrary else Icons.Default.Description,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = Color.LightGray
@@ -615,41 +617,44 @@ fun VaultItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onPreview() },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(12.dp)
         ) {
+            // Top Section: Thumbnail + Title + Info + Pin Star
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Visual Thumbnail or Stylish File Badge
+                // Squircle Thumbnail or Styled Badge
                 if (item.itemType == ItemType.PHOTO && file != null && file.exists()) {
                     AsyncImage(
                         model = file,
                         contentDescription = item.title,
                         modifier = Modifier
-                            .size(54.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
                             .background(Color.LightGray.copy(alpha = 0.2f)),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Box(
                         modifier = Modifier
-                            .size(54.dp)
+                            .size(52.dp)
                             .background(
                                 if (isPdf) Color(0xFFFEE2E2)
                                 else if (item.itemType == ItemType.PHOTO) Color(0xFFDBEAFE)
                                 else Color(0xFFD1FAE5),
-                                RoundedCornerShape(12.dp)
+                                RoundedCornerShape(14.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -657,12 +662,12 @@ fun VaultItemCard(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     "PDF",
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Black,
                                     color = Color(0xFFDC2626)
                                 )
                                 Icon(
-                                    Icons.Default.Info,
+                                    Icons.Default.PictureAsPdf,
                                     contentDescription = null,
                                     tint = Color(0xFFDC2626),
                                     modifier = Modifier.size(18.dp)
@@ -670,7 +675,7 @@ fun VaultItemCard(
                             }
                         } else {
                             Icon(
-                                if (item.itemType == ItemType.PHOTO) Icons.Default.AccountBox else Icons.Default.Info,
+                                if (item.itemType == ItemType.PHOTO) Icons.Default.PhotoLibrary else Icons.Default.Description,
                                 contentDescription = null,
                                 tint = if (item.itemType == ItemType.PHOTO) Color(0xFF2563EB) else Color(0xFF059669),
                                 modifier = Modifier.size(26.dp)
@@ -680,82 +685,140 @@ fun VaultItemCard(
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
-                Column {
+
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         item.title,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         maxLines = 1
                     )
-                    val folderDisplay = if (item.folderName.isNotBlank() && item.folderName != "General") {
-                        "📁 ${item.folderName} • "
-                    } else ""
-                    Text(
-                        "$folderDisplay${FileUtils.formatFileSize(item.fileSize)}",
-                        fontSize = 12.sp,
-                        color = Color.Gray
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (item.folderName.isNotBlank() && item.folderName != "General") {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                            ) {
+                                Text(
+                                    "📁 ${item.folderName}",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
+                        Text(
+                            FileUtils.formatFileSize(item.fileSize),
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                if (item.isPinned) {
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = "Pinned",
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Preview Eye button
-                IconButton(onClick = onPreview) {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Preview",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Bottom Section: Modern Soft-Tinted Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Preview / View button
+                ActionBadgeButton(
+                    icon = Icons.Default.Visibility,
+                    contentDescription = "Preview",
+                    containerColor = Color(0xFFEFF6FF),
+                    contentColor = Color(0xFF2563EB),
+                    onClick = onPreview
+                )
+
                 // Rename button
                 if (onRename != null) {
-                    IconButton(onClick = onRename) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Rename",
-                            tint = Color(0xFF6366F1),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                // Folder / Move button
-                IconButton(onClick = onMove) {
-                    Icon(
-                        Icons.Default.DriveFileMove,
-                        contentDescription = "Move to Folder",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
+                    ActionBadgeButton(
+                        icon = Icons.Default.DriveFileRenameOutline,
+                        contentDescription = "Rename",
+                        containerColor = Color(0xFFEEF2FF),
+                        contentColor = Color(0xFF6366F1),
+                        onClick = onRename
                     )
                 }
+
+                // Move Folder button
+                ActionBadgeButton(
+                    icon = Icons.Default.DriveFileMove,
+                    contentDescription = "Move to Folder",
+                    containerColor = Color(0xFFF1F5F9),
+                    contentColor = Color(0xFF64748B),
+                    onClick = onMove
+                )
+
                 // Pin button
-                IconButton(onClick = onTogglePin) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = "Pin",
-                        tint = if (item.isPinned) Color(0xFFF59E0B) else Color.LightGray,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                ActionBadgeButton(
+                    icon = Icons.Default.Star,
+                    contentDescription = "Pin",
+                    containerColor = if (item.isPinned) Color(0xFFFEF3C7) else Color(0xFFF8FAFC),
+                    contentColor = if (item.isPinned) Color(0xFFD97706) else Color.LightGray,
+                    onClick = onTogglePin
+                )
+
                 // WhatsApp Share button
-                IconButton(onClick = onShare) {
-                    Icon(
-                        Icons.Default.Share,
-                        contentDescription = "Share",
-                        tint = Color(0xFF16A34A),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                ActionBadgeButton(
+                    icon = Icons.Default.Share,
+                    contentDescription = "Share",
+                    containerColor = Color(0xFFDCFCE7),
+                    contentColor = Color(0xFF16A34A),
+                    onClick = onShare
+                )
+
                 // Delete button
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                ActionBadgeButton(
+                    icon = Icons.Default.DeleteOutline,
+                    contentDescription = "Delete",
+                    containerColor = Color(0xFFFEE2E2),
+                    contentColor = Color(0xFFDC2626),
+                    onClick = onDelete
+                )
             }
+        }
+    }
+}
+
+@Composable
+fun ActionBadgeButton(
+    icon: ImageVector,
+    contentDescription: String,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(10.dp),
+        color = containerColor,
+        modifier = Modifier.size(36.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = contentColor,
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }

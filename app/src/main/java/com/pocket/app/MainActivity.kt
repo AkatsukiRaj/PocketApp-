@@ -32,9 +32,9 @@ import com.pocket.app.utils.LanguageHelper
 
 sealed class Screen(val route: String, val english: String, val tamil: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", "முகப்பு", Icons.Default.Home)
-    object Photos : Screen("photos", "Photos", "படங்கள்", Icons.Default.AccountBox)
-    object Docs : Screen("docs", "Docs", "கோப்புகள்", Icons.Default.Info)
-    object Notes : Screen("notes", "Notes", "குறிப்புகள்", Icons.Default.Edit)
+    object Photos : Screen("photos", "Photos", "படங்கள்", Icons.Default.PhotoLibrary)
+    object Docs : Screen("docs", "Docs", "கோப்புகள்", Icons.Default.Description)
+    object Notes : Screen("notes", "Notes", "குறிப்புகள்", Icons.Default.StickyNote2)
 }
 
 class MainActivity : ComponentActivity() {
@@ -97,18 +97,24 @@ class MainActivity : ComponentActivity() {
                                         Icon(
                                             screen.icon,
                                             contentDescription = screen.english,
-                                            tint = if (selected) MaterialTheme.colorScheme.primary else Color.Gray
+                                            modifier = Modifier.size(24.dp)
                                         )
                                     },
                                     label = {
                                         Text(
                                             labelText,
                                             fontSize = if (language == AppLanguage.BOTH) 9.sp else 11.sp,
-                                            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Normal,
-                                            color = if (selected) MaterialTheme.colorScheme.primary else Color.Gray,
+                                            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
                                             maxLines = 1
                                         )
-                                    }
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                        unselectedIconColor = Color.Gray,
+                                        unselectedTextColor = Color.Gray
+                                    )
                                 )
                             }
                         }

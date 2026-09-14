@@ -29,10 +29,6 @@ class PocketRepository(
 
     fun getNotes(): Flow<List<PocketItem>> = dao.getItemsByType(ItemType.NOTE)
 
-    fun getReminders(): Flow<List<PocketItem>> = dao.getItemsByType(ItemType.REMINDER)
-
-    fun getActiveReminders(): Flow<List<PocketItem>> = dao.getActiveReminders()
-
     fun searchItems(query: String): Flow<List<PocketItem>> = dao.searchItems(query)
 
     suspend fun saveIncomingUri(
@@ -88,38 +84,8 @@ class PocketRepository(
         dao.insertItem(note)
     }
 
-    suspend fun createReminder(
-        title: String,
-        description: String,
-        reminderTimeMillis: Long,
-        category: ItemCategory = ItemCategory.MEDICAL
-    ): Long = withContext(Dispatchers.IO) {
-        val reminder = PocketItem(
-            title = title,
-            description = description,
-            itemType = ItemType.REMINDER,
-            category = category,
-            reminderTime = reminderTimeMillis,
-            isAlarmActive = true
-        )
-        val id = dao.insertItem(reminder)
-        val createdItem = reminder.copy(id = id)
-        ReminderScheduler.scheduleReminder(context, createdItem)
-        id
-    }
-
     suspend fun togglePin(item: PocketItem) = withContext(Dispatchers.IO) {
         dao.togglePin(item.id, !item.isPinned)
-    }
-
-    suspend fun toggleAlarm(item: PocketItem) = withContext(Dispatchers.IO) {
-        val newActiveState = !item.isAlarmActive
-        dao.setAlarmActive(item.id, newActiveState)
-        if (newActiveState) {
-            ReminderScheduler.scheduleReminder(context, item.copy(isAlarmActive = true))
-        } else {
-            ReminderScheduler.cancelReminder(context, item.id)
-        }
     }
 
     suspend fun deleteItem(item: PocketItem) = withContext(Dispatchers.IO) {

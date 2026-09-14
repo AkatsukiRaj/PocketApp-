@@ -95,77 +95,216 @@ fun HomeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // App Header with Settings Button
+        // Modern Hero Vault Card with Quick Stats & Language Switcher
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(26.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .background(Color(0xFFF59E0B), RoundedCornerShape(16.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("P", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
-                        }
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    "Pocket",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = Color.White
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    Color(0xFF1E3A8A),
+                                    Color(0xFF2563EB),
+                                    Color(0xFF4F46E5)
                                 )
-                                if (language == AppLanguage.BOTH) {
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Surface(
-                                        color = Color.White.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        // Top Row: Brand + Quick Lang Switcher + Settings
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(Color(0xFFF59E0B), RoundedCornerShape(16.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("P", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            "பாக்கெட்",
-                                            color = Color.White,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            "Pocket",
+                                            fontSize = 22.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color.White
                                         )
+                                        if (language == AppLanguage.BOTH) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                color = Color.White.copy(alpha = 0.2f),
+                                                shape = RoundedCornerShape(8.dp)
+                                            ) {
+                                                Text(
+                                                    "பாக்கெட்",
+                                                    color = Color.White,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
                                     }
+                                    Text(
+                                        LanguageHelper.text(
+                                            language,
+                                            "Personal Digital Vault",
+                                            "உங்கள் தனிப்பட்ட பெட்டகம்"
+                                        ),
+                                        fontSize = 12.sp,
+                                        color = Color.White.copy(alpha = 0.85f)
+                                    )
                                 }
                             }
-                            Text(
-                                LanguageHelper.text(
-                                    language,
-                                    "Personal Digital Vault",
-                                    "உங்கள் தனிப்பட்ட பெட்டகம்"
-                                ),
-                                fontSize = 13.sp,
-                                color = Color.White.copy(alpha = 0.9f)
-                            )
-                        }
-                    }
 
-                    // Settings Button
-                    IconButton(
-                        onClick = { showSettings = true },
-                        modifier = Modifier
-                            .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-                            .size(42.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "Settings",
-                            tint = Color.White
-                        )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // Quick Language Switcher Pill
+                                Surface(
+                                    onClick = {
+                                        val nextLang = when (language) {
+                                            AppLanguage.ENGLISH -> AppLanguage.TAMIL
+                                            AppLanguage.TAMIL -> AppLanguage.BOTH
+                                            AppLanguage.BOTH -> AppLanguage.ENGLISH
+                                        }
+                                        viewModel.setLanguage(nextLang)
+                                    },
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = Color.White.copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = when (language) {
+                                            AppLanguage.ENGLISH -> "ENG"
+                                            AppLanguage.TAMIL -> "தமிழ்"
+                                            AppLanguage.BOTH -> "BOTH"
+                                        },
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                    )
+                                }
+
+                                // Settings Button
+                                IconButton(
+                                    onClick = { showSettings = true },
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                ) {
+                                    Icon(
+                                        Icons.Default.Settings,
+                                        contentDescription = "Settings",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Quick Stats Bar inside Hero Card
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            // Photos stat
+                            Surface(
+                                onClick = onNavigateToPhotos,
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color.White.copy(alpha = 0.16f),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        photos.size.toString(),
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        LanguageHelper.text(language, "📸 Photos", "📸 படங்கள்"),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+
+                            // Docs stat
+                            Surface(
+                                onClick = onNavigateToDocs,
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color.White.copy(alpha = 0.16f),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        docs.size.toString(),
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        LanguageHelper.text(language, "📄 Docs", "📄 ஆவணங்கள்"),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+
+                            // Notes stat
+                            Surface(
+                                onClick = onNavigateToNotes,
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color.White.copy(alpha = 0.16f),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        notes.size.toString(),
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        LanguageHelper.text(language, "📝 Notes", "📝 குறிப்புகள்"),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -311,7 +450,7 @@ fun HomeScreen(
             }
         }
 
-        // 4 Categories
+        // Modern Bento Category Cards
         item {
             Text(
                 LanguageHelper.text(language, "Categories", "பிரிவுகள்"),
@@ -323,21 +462,21 @@ fun HomeScreen(
         item {
             MainCategoryCard(
                 title = LanguageHelper.text(language, "Photos & Album", "படங்கள் & ஆல்பம்"),
-                subtitle = LanguageHelper.text(language, "Prescriptions, Bills, Photos", "மருத்துவ சீட்டுகள், ரசீதுகள்"),
+                subtitle = LanguageHelper.text(language, "Prescriptions, Bills, Photos", "மருத்துவ சீட்டுகள், ரசீதுகள், படங்கள்"),
                 countText = "${photos.size} " + LanguageHelper.text(language, "Files", "கோப்புகள்"),
-                icon = Icons.Default.AccountBox,
-                gradient = Brush.horizontalGradient(listOf(Color(0xFF2563EB), Color(0xFF1D4ED8))),
+                icon = Icons.Default.PhotoLibrary,
+                gradient = Brush.horizontalGradient(listOf(Color(0xFF1D4ED8), Color(0xFF3B82F6))),
                 onClick = onNavigateToPhotos
             )
         }
 
         item {
             MainCategoryCard(
-                title = LanguageHelper.text(language, "Documents (PDF & Excel)", "ஆவணங்கள் (PDF & Excel)"),
-                subtitle = LanguageHelper.text(language, "Aadhaar, PAN, Bank, Sheets", "ஆதார், பான், வங்கி, எக்செல்"),
+                title = LanguageHelper.text(language, "Documents (PDF & Office)", "ஆவணங்கள் (PDF & Office)"),
+                subtitle = LanguageHelper.text(language, "Aadhaar, PAN, Bank, Sheets", "ஆதார், பான், வங்கி, விரிதாள்கள்"),
                 countText = "${docs.size} " + LanguageHelper.text(language, "Files", "கோப்புகள்"),
-                icon = Icons.Default.Info,
-                gradient = Brush.horizontalGradient(listOf(Color(0xFF059669), Color(0xFF047857))),
+                icon = Icons.Default.Description,
+                gradient = Brush.horizontalGradient(listOf(Color(0xFF0F766E), Color(0xFF10B981))),
                 onClick = onNavigateToDocs
             )
         }
@@ -347,8 +486,8 @@ fun HomeScreen(
                 title = LanguageHelper.text(language, "Smart Notes", "ஸ்மார்ட் குறிப்புகள்"),
                 subtitle = LanguageHelper.text(language, "Grocery list, Daily notes", "மளிகை பட்டியல், அன்றாட குறிப்புகள்"),
                 countText = "${notes.size} " + LanguageHelper.text(language, "Notes", "குறிப்புகள்"),
-                icon = Icons.Default.Edit,
-                gradient = Brush.horizontalGradient(listOf(Color(0xFF7C3AED), Color(0xFF6D28D9))),
+                icon = Icons.Default.StickyNote2,
+                gradient = Brush.horizontalGradient(listOf(Color(0xFF6D28D9), Color(0xFF8B5CF6))),
                 onClick = onNavigateToNotes
             )
         }
@@ -368,8 +507,8 @@ fun MainCategoryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        shape = RoundedCornerShape(22.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
             modifier = Modifier
@@ -388,8 +527,8 @@ fun MainCategoryCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
-                            .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp)),
+                            .size(54.dp)
+                            .background(Color.White.copy(alpha = 0.22f), RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -407,26 +546,37 @@ fun MainCategoryCard(
                             fontSize = 17.sp,
                             color = Color.White
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = subtitle,
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = Color.White.copy(alpha = 0.88f),
                             maxLines = 1
                         )
                     }
                 }
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.White.copy(alpha = 0.25f)
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White.copy(alpha = 0.22f)
                 ) {
-                    Text(
-                        text = countText,
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = countText,
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }

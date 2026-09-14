@@ -1,5 +1,6 @@
 package com.pocket.app.ui.notes
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,11 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pocket.app.data.model.PocketItem
 import com.pocket.app.ui.viewmodel.PocketViewModel
+import com.pocket.app.utils.FileUtils
 import com.pocket.app.utils.LanguageHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,6 +30,7 @@ fun NotesScreen(
 ) {
     val notes by viewModel.notes.collectAsState()
     val language by viewModel.language.collectAsState()
+    val context = LocalContext.current
     var showCreateDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<PocketItem?>(null) }
 
@@ -64,7 +68,7 @@ fun NotesScreen(
                 contentColor = Color.White,
                 shape = RoundedCornerShape(18.dp)
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null)
+                Icon(Icons.Default.StickyNote2, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     LanguageHelper.text(language, "New Note", "புது குறிப்பு"),
@@ -87,7 +91,7 @@ fun NotesScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            Icons.Default.Edit,
+                            Icons.Default.StickyNote2,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = Color.LightGray
@@ -120,9 +124,13 @@ fun NotesScreen(
                     items(notes) { note ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF5FF)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                Color(0xFF8B5CF6).copy(alpha = 0.25f)
+                            )
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Row(
@@ -130,32 +138,109 @@ fun NotesScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        note.title,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 18.sp,
-                                        color = Color(0xFF581C87)
-                                    )
-                                    Row {
-                                        IconButton(onClick = { viewModel.togglePin(note) }) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = Color(0xFFF3E8FF),
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    Icons.Default.StickyNote2,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFF7C3AED),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            note.title,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 17.sp,
+                                            maxLines = 1
+                                        )
+                                    }
+
+                                    Surface(
+                                        onClick = { viewModel.togglePin(note) },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (note.isPinned) Color(0xFFFEF3C7) else Color(0xFFF8FAFC),
+                                        modifier = Modifier.size(34.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
                                             Icon(
                                                 Icons.Default.Star,
                                                 contentDescription = "Pin",
-                                                tint = if (note.isPinned) Color(0xFFF59E0B) else Color.LightGray
+                                                tint = if (note.isPinned) Color(0xFFD97706) else Color.LightGray,
+                                                modifier = Modifier.size(18.dp)
                                             )
-                                        }
-                                        IconButton(onClick = { itemToDelete = note }) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Gray)
                                         }
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Text(
                                     note.description,
-                                    fontSize = 15.sp,
-                                    lineHeight = 22.sp,
-                                    color = Color(0xFF374151)
+                                    fontSize = 14.sp,
+                                    lineHeight = 20.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
                                 )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // WhatsApp Share button
+                                    Surface(
+                                        onClick = {
+                                            FileUtils.shareText(
+                                                context,
+                                                "${note.title}\n\n${note.description}",
+                                                note.title
+                                            )
+                                        },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color(0xFFDCFCE7),
+                                        modifier = Modifier.size(34.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                Icons.Default.Share,
+                                                contentDescription = "Share",
+                                                tint = Color(0xFF16A34A),
+                                                modifier = Modifier.size(17.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    // Delete button
+                                    Surface(
+                                        onClick = { itemToDelete = note },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color(0xFFFEE2E2),
+                                        modifier = Modifier.size(34.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                Icons.Default.DeleteOutline,
+                                                contentDescription = "Delete",
+                                                tint = Color(0xFFDC2626),
+                                                modifier = Modifier.size(17.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

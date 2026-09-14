@@ -39,9 +39,6 @@ class PocketViewModel(application: Application) : AndroidViewModel(application) 
     val notes: StateFlow<List<PocketItem>> = repository.getNotes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val reminders: StateFlow<List<PocketItem>> = repository.getReminders()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     fun setLanguage(newLanguage: AppLanguage) {
         preferences.setLanguage(newLanguage)
     }
@@ -82,21 +79,9 @@ class PocketViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun addReminder(title: String, desc: String, timeMillis: Long, category: ItemCategory = ItemCategory.MEDICAL) {
-        viewModelScope.launch {
-            repository.createReminder(title, desc, timeMillis, category)
-        }
-    }
-
     fun togglePin(item: PocketItem) {
         viewModelScope.launch {
             repository.togglePin(item)
-        }
-    }
-
-    fun toggleAlarm(item: PocketItem) {
-        viewModelScope.launch {
-            repository.toggleAlarm(item)
         }
     }
 
